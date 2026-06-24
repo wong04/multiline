@@ -1,0 +1,74 @@
+:root {
+	/* bright vibrant cosmic sky */
+	--sky-top: #7fe0ff;
+	--sky-mid: #8aa6ff;
+	--sky-bot: #ffb4dd;
+
+	--deep: #0f1f47; /* "window into space" board fill */
+	--deep-2: #163063;
+	--ink: #16224d; /* text on bright areas */
+	--ink-soft: #41507e;
+	--cream: #fff7ef;
+	--white: #ffffff;
+
+	/* players — glossy orbs */
+	--p-a: #37d0ff;
+	--p-a-hi: #e2fbff;
+	--p-a-deep: #0a86c7;
+	--p-b: #ff7a59;
+	--p-b-hi: #ffe0c4;
+	--p-b-deep: #d8421f;
+
+	/* accent pops */
+	--sun: #ffd23f;
+	--mint: #6ef0c0;
+	--bubble: #ff8fcf;
+	--grape: #9b8cff;
+
+	--win: #ffe24a;
+
+	/* sticker outline + shadow */
+	--outline: #16224d;
+	--shadow: rgba(22, 34, 77, 0.28);
+
+	/* type */
+	--display: "Baloo 2", "Trebuchet MS", sans-serif;
+	--ui: "Fredoka", "Trebuchet MS", sans-serif;
+
+	/* shape */
+	--radius: 16px;
+	--radius-lg: 26px;
+	--radius-pill: 999px;
+
+	/* motion */
+	--spring: cubic-bezier(0.34, 1.56, 0.64, 1); /* overshoot */
+	--ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+
+body {
+	margin: 0;
+	font-family: var(--ui);
+	font-size: 16px;
+	color: var(--ink);
+	background: linear-gradient(160deg, var(--sky-top), var(--sky-mid) 48%, var(--sky-bot));
+	background-attachment: fixed;
+	overflow-x: hidden;
+	cursor: none;
+}
+
+button, input, select { font-family: var(--ui); }
+.hidden { display: none !important; }
+::selection { background: var(--sun); color: var(--ink); }
+
+@media (prefers-reduced-motion: reduce) {
+	*, *::before, *::after {
+		animation-duration: 0.001ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
+	body { cursor: auto; }
+	#cursor { display: none; }
+}

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Multiline · a cosmic line game</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+	<link
+		href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Fredoka:wght@400;500;600;700&display=swap"
+		rel="stylesheet"
+	/>
+	<link rel="stylesheet" href="styles/tokens.css" />
+	<link rel="stylesheet" href="styles/chrome.css" />
+	<link rel="stylesheet" href="styles/app.css" />
+</head>
+<body>
+	<div id="cursor" aria-hidden="true"></div>
+
+	<!-- floating cosmic scene -->
+	<div class="scene" aria-hidden="true">
+		<span class="planet drift p1"></span>
+		<span class="planet drift p2 ringed"></span>
+		<span class="planet drift p3"></span>
+		<span class="planet drift p4"></span>
+		<span class="planet drift p5"></span>
+		<span class="twinkle t1">✦</span>
+		<span class="twinkle t2">✦</span>
+		<span class="twinkle t3">✦</span>
+		<span class="twinkle t4">✦</span>
+	</div>
+
+	<!-- boot loader -->
+	<div id="loader" aria-hidden="true">
+		<div class="rocket">🚀</div>
+		<p class="loader-label">blasting off…</p>
+	</div>
+
+	<div class="stage">
+		<header class="masthead">
+			<h1 class="wordmark">Multiline</h1>
+			<p class="tagline">A cosmic line-up game — get your planets in a row! 🪐</p>
+			<button id="help" class="help-sticker" title="Learn to play" aria-label="Learn to play">?</button>
+		</header>
+
+		<main>
+			<!-- LOBBY -->
+			<section id="console" class="console">
+				<div class="console-head">Set up your game</div>
+
+				<div class="console-grid">
+					<div class="field">
+						<label for="ruleset">Ruleset</label>
+						<div class="select-wrap">
+							<select id="ruleset">
+								<option value="classic">Classic · plain lines</option>
+								<option value="branch">Branching · learn timelines</option>
+								<option value="full" selected>Full · the real game</option>
+							</select>
+						</div>
+						<p class="field-note" id="ruleset-note"></p>
+					</div>
+
+					<div class="field">
+						<label>Opponent</label>
+						<div class="segmented" id="mode" role="group">
+							<button type="button" data-mode="ai" class="active">🤖 Computer</button>
+							<button type="button" data-mode="hotseat">🛋 Hotseat</button>
+							<button type="button" data-mode="online">🌍 Online</button>
+						</div>
+						<p class="field-note" id="mode-note"></p>
+					</div>
+
+					<div class="field" id="difficulty-field">
+						<label>Difficulty</label>
+						<div class="segmented" id="difficulty" role="group">
+							<button type="button" data-diff="easy">Easy</button>
+							<button type="button" data-diff="normal" class="active">Normal</button>
+							<button type="button" data-diff="hard">Hard</button>
+						</div>
+					</div>
+				</div>
+
+				<button id="begin" class="primary">Start Game ✨</button>
+
+				<div class="or-line"><span>or</span></div>
+
+				<div class="console-foot">
+					<button id="quickmatch" class="ghost">🛰 Find an opponent</button>
+					<div class="join">
+						<input id="join-code" maxlength="5" placeholder="CODE" aria-label="Room code" />
+						<button id="join" class="ghost">Join ▸</button>
+					</div>
+					<button id="tutorial-start" class="link">✺ New here? Learn to play</button>
+					<button id="rulebook-open" class="link">📖 Rulebook</button>
+				</div>
+			</section>
+
+			<!-- GAME TABLE -->
+			<section id="table" class="table hidden">
+				<div class="hud">
+					<div class="readout">
+						<span class="readout-dot"></span>
+						<span id="status">Connecting…</span>
+						<span id="room-pill" class="pill hidden"></span>
+					</div>
+					<div class="controls">
+						<button id="branch-toggle" class="chip hidden">Fork: off</button>
+						<button id="explain-toggle" class="chip">Explain: off</button>
+						<button id="rules-chip" class="chip">📖 Rules</button>
+						<button id="reset" class="chip">New round</button>
+						<button id="leave" class="chip">Leave</button>
+					</div>
+				</div>
+
+				<div id="hint" class="hint"></div>
+
+				<div class="table-wrap">
+					<canvas id="board"></canvas>
+				</div>
+
+				<div class="legend">
+					<span><i class="swatch aurora"></i> Player A</span>
+					<span><i class="swatch solar"></i> Player B</span>
+					<span><i class="swatch echo"></i> Echo · copied when a timeline forked</span>
+					<span class="legend-goal">Goal: <strong id="goal-text">4 in a row</strong> — in one board or across timelines!</span>
+				</div>
+			</section>
+		</main>
+
+		<footer class="stage-foot">
+			<span id="waiting-banner" class="hidden">🛰 Scanning the void for an opponent… <button id="waiting-cancel" class="link">cancel</button></span>
+		</footer>
+	</div>
+
+	<!-- RULEBOOK -->
+	<div id="rulebook" class="modal hidden" role="dialog" aria-label="Rulebook">
+		<div class="modal-card">
+			<button id="rulebook-close" class="modal-close" aria-label="Close">✕</button>
+			<h2 class="modal-title">How to play 🪐</h2>
+
+			<h3>Goal</h3>
+			<p>Get your planets in a row before your opponent — across, down, diagonally
+			<strong>within one board</strong>, or stepping diagonally <strong>across neighbouring timelines</strong>.</p>
+
+			<h3>Your turn</h3>
+			<p>Click an empty cell to drop your planet. Players alternate.</p>
+
+			<h3>Forking timelines 🔀</h3>
+			<p>Turn on <strong>Fork</strong>, then click an empty cell to spin off a <em>new timeline</em> —
+			a copy of that board. Copied planets appear as faded <strong>echoes</strong>; ones you place
+			are bright. You can fork up to the timeline limit of the ruleset.</p>
+
+			<h3>Winning across timelines ✨</h3>
+			<p>A winning row can step from one board into the timeline next to it. You need as many
+			timelines as your target row length (e.g. 4-in-a-row needs 4 boards in a diagonal).</p>
+
+			<h3>Rulesets</h3>
+			<ul>
+				<li><strong>Classic</strong> — one board, 5 in a row. Just the basics.</li>
+				<li><strong>Branching</strong> — small board, 3 in a row, up to 3 timelines. Easy forks.</li>
+				<li><strong>Full</strong> — 8×8, 4 in a row, up to 4 timelines. The real game.</li>
+			</ul>
+
+			<h3>Modes</h3>
+			<p>🤖 vs Computer (easy/normal/hard) · 🛋 Hotseat (same device) · 🌍 Online (share a code) ·
+			🛰 Quick-match (random opponent).</p>
+		</div>
+	</div>
+
+	<!-- TUTORIAL -->
+	<aside id="tutorial" class="tutorial hidden" aria-live="polite">
+		<div class="tutorial-card">
+			<div class="tutorial-step" id="tutorial-step">Lesson 1 / 3</div>
+			<h2 class="tutorial-title" id="tutorial-title"></h2>
+			<p class="tutorial-body" id="tutorial-body"></p>
+			<div class="tutorial-actions">
+				<button id="tutorial-skip" class="link">Skip</button>
+				<button id="tutorial-next" class="primary small">Next ▸</button>
+			</div>
+		</div>
+	</aside>
+
+	<script type="module" src="js/main.js"></script>
+</body>
+</html>
