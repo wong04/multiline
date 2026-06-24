@@ -34,12 +34,19 @@ jobs:
 
       - name: Deploy (with retry)
         env:
+          # Set EITHER one in repo secrets:
+          #   RAILWAY_TOKEN      = a project token (Project → Settings → Tokens)
+          #   RAILWAY_API_TOKEN  = an account token (https://railway.com/account/tokens)
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
+          PROJECT_ID: 8847a0fc-ed72-41f7-9d35-0f0a98cf3a33
         run: |
-          if [ -z "$RAILWAY_TOKEN" ]; then
-            echo "::error::RAILWAY_TOKEN secret is not set. Add it in repo Settings → Secrets → Actions."
+          if [ -z "$RAILWAY_TOKEN" ] && [ -z "$RAILWAY_API_TOKEN" ]; then
+            echo "::error::No Railway token. Add RAILWAY_TOKEN (project) or RAILWAY_API_TOKEN (account) in repo Settings → Secrets → Actions."
             exit 1
           fi
+          # Linking is required for an account token; harmless with a project token.
+          railway link --project "$PROJECT_ID" --environment production --service multiline || true
           for i in 1 2 3; do
             echo "── Deploy attempt $i ──"
             if railway up --service multiline --ci; then
