@@ -29,8 +29,10 @@
 	animation: fadein 600ms var(--ease) both;
 	transition: transform 450ms var(--spring), font-size 300ms var(--ease);
 }
-/* straighten everything once a game/tutorial is on */
-body.playing .wordmark { transform: rotate(0deg); }
+/* straighten + shrink the title once a game/tutorial is on */
+body.playing .wordmark { transform: rotate(0deg); font-size: clamp(1.8rem, 4.5vw, 2.8rem); }
+body.playing .masthead { padding: 0.6rem 0 0.4rem; }
+body.playing .tagline { display: none; }
 @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
 .tagline {
 	margin: 0.7rem 0 0;
