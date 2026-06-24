@@ -45,6 +45,10 @@ jobs:
             echo "::error::No Railway token. Add RAILWAY_TOKEN (project) or RAILWAY_API_TOKEN (account) in repo Settings → Secrets → Actions."
             exit 1
           fi
+          # An unset secret arrives as an empty string; the CLI would try to use it and
+          # fail with "Invalid RAILWAY_TOKEN". Drop any empty var so the real one is used.
+          if [ -z "$RAILWAY_TOKEN" ]; then unset RAILWAY_TOKEN; fi
+          if [ -z "$RAILWAY_API_TOKEN" ]; then unset RAILWAY_API_TOKEN; fi
           # Linking is required for an account token; harmless with a project token.
           railway link --project "$PROJECT_ID" --environment production --service multiline || true
           for i in 1 2 3; do
