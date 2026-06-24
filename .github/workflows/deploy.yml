@@ -42,15 +42,21 @@ jobs:
           PROJECT_ID: 8847a0fc-ed72-41f7-9d35-0f0a98cf3a33
         run: |
           if [ -z "$RAILWAY_TOKEN" ] && [ -z "$RAILWAY_API_TOKEN" ]; then
-            echo "::error::No Railway token. Add RAILWAY_TOKEN (project) or RAILWAY_API_TOKEN (account) in repo Settings → Secrets → Actions."
+            echo "::error::No Railway token. Add RAILWAY_TOKEN (project token) or RAILWAY_API_TOKEN (account token) in repo Settings → Secrets → Actions."
             exit 1
           fi
-          # An unset secret arrives as an empty string; the CLI would try to use it and
-          # fail with "Invalid RAILWAY_TOKEN". Drop any empty var so the real one is used.
+          # An unset secret arrives as an empty string; drop it so the CLI uses the real one.
           if [ -z "$RAILWAY_TOKEN" ]; then unset RAILWAY_TOKEN; fi
           if [ -z "$RAILWAY_API_TOKEN" ]; then unset RAILWAY_API_TOKEN; fi
-          # Linking is required for an account token; harmless with a project token.
-          railway link --project "$PROJECT_ID" --environment production --service multiline || true
+
+          if [ -n "${RAILWAY_TOKEN:-}" ]; then
+            echo "Using a project token (no linking needed)."
+          else
+            echo "Using an account token — linking project…"
+            railway whoami || true
+            railway link --project "$PROJECT_ID" --environment production --service multiline
+          fi
+
           for i in 1 2 3; do
             echo "── Deploy attempt $i ──"
             if railway up --service multiline --ci; then
