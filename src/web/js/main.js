@@ -219,6 +219,9 @@ function boot() {
 	setupCanvas();
 	setupAtmosphere();
 
+	// Read-only hook for the playtest harness: inspect state + locate cells. No behaviour change.
+	window.__multiline = { view, cellPoint: render.cellClientPoint };
+
 	const loader = document.getElementById("loader");
 	const hide = () => loader && loader.classList.add("gone");
 	if (document.readyState === "complete") setTimeout(hide, 700);

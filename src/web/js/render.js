@@ -66,6 +66,14 @@ export function eventCell(ev) {
 	return null;
 }
 
+// Viewport coords of a cell's center (CSS px). Read-only; used by the playtest harness.
+export function cellClientPoint(l, x, y) {
+	if (!view.game || !layout[l]) return null;
+	const { cx, cy } = cellCenter(l, x, y);
+	const rect = canvas.getBoundingClientRect();
+	return { x: rect.left + cx, y: rect.top + cy };
+}
+
 const easeOutBack = (t) => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
 const easeOut = (t) => 1 - Math.pow(1 - t, 3);
 
