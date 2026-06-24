@@ -51,8 +51,20 @@ and starts:
 ```
 uv run uvicorn src.server.app:app --host 0.0.0.0 --port $PORT
 ```
-Push to a Railway-connected repo, or `railway up`. The single service serves the API,
-WebSocket, and front end — no separate front-end host needed.
+The single service (`multiline`) serves the API, WebSocket, and front end — no separate
+front-end host needed. Public URL: https://multiline-production.up.railway.app
+
+### Push-to-deploy (CI)
+`.github/workflows/deploy.yml` runs the tests then deploys on every push to `main` via the
+Railway CLI (`railway up`), which is more reliable than Railway's native GitHub builder.
+One-time setup:
+1. Railway dashboard → project **multiline** → **Settings → Tokens** → create a token.
+2. GitHub repo → **Settings → Secrets and variables → Actions** → add secret
+   `RAILWAY_TOKEN` with that value.
+3. In Railway, **disconnect** the service's native GitHub source (service → Settings →
+   Source) so deploys come only from the Action and you don't get duplicate builds.
+
+Manual deploy any time: `railway up --service multiline`.
 
 ## Rulesets (accessibility ramp)
 - **Classic** — branching off; plain Gomoku. Learn the base in seconds.

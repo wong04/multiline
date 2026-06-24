@@ -1,0 +1,53 @@
+name: Deploy to Railway
+
+# Reliable push-to-deploy: run tests, then deploy via the Railway CLI (`railway up`),
+# which is far more dependable than Railway's native GitHub builder on the hobby plan.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up uv + Python
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync --dev
+
+      - name: Run tests
+        run: uv run pytest -q
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy (with retry)
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          if [ -z "$RAILWAY_TOKEN" ]; then
+            echo "::error::RAILWAY_TOKEN secret is not set. Add it in repo Settings → Secrets → Actions."
+            exit 1
+          fi
+          for i in 1 2 3; do
+            echo "── Deploy attempt $i ──"
+            if railway up --service multiline --ci; then
+              echo "Deploy succeeded on attempt $i"
+              exit 0
+            fi
+            echo "Attempt $i failed; retrying in 15s…"
+            sleep 15
+          done
+          echo "::error::All deploy attempts failed"
+          exit 1
