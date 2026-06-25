@@ -26,6 +26,10 @@ class Config:
 	# A line that steps across timelines may win with fewer stones than an in-board line,
 	# so the extra dimension is worth using. None => same as win_length (no cross discount).
 	cross_win_length: int | None = None
+	# Whether a fork copies the opponent's planets too. True keeps the new timeline
+	# contestable (they can block across boards) — this is what gives games defensive
+	# depth. False is an asymmetric "fresh front" (fast but shallow).
+	fork_keep_opponent: bool = True
 
 	@property
 	def cross_len(self) -> int:
@@ -76,11 +80,14 @@ class Game:
 			raise IllegalMove(f"no timeline {source}")
 		if not self._in_bounds(x, y):
 			raise IllegalMove(f"({x}, {y}) is off the board")
-		mine = {pos: p for pos, p in self.timelines[source].items() if p is self.current}
-		if (x, y) in mine:
+		src = self.timelines[source]
+		carried = dict(src) if self.config.fork_keep_opponent else {
+			pos: p for pos, p in src.items() if p is self.current
+		}
+		if (x, y) in carried:
 			raise IllegalMove(f"({x}, {y}) is occupied in timeline {source}")
-		inherited_keys = set(mine.keys())
-		new_timeline = dict(mine)
+		inherited_keys = set(carried.keys())
+		new_timeline = dict(carried)
 		new_timeline[(x, y)] = self.current
 		self.timelines.append(new_timeline)
 		self.inherited.append(inherited_keys)

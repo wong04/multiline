@@ -4,7 +4,7 @@ import { view } from "./state.js";
 export const RULESETS = {
 	classic: { size: 15, winLength: 5, maxTimelines: 1, allowBranch: false },
 	branch: { size: 6, winLength: 4, crossWinLength: 3, maxTimelines: 3, allowBranch: true },
-	full: { size: 8, winLength: 5, crossWinLength: 3, maxTimelines: 4, allowBranch: true },
+	full: { size: 10, winLength: 5, crossWinLength: 3, maxTimelines: 4, allowBranch: true },
 };
 
 const RULESET_NOTE = {

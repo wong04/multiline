@@ -27,17 +27,28 @@ def test_off_board_rejected():
 		g.place(0, 5, 0)
 
 
-def test_branch_carries_only_brancher_stones():
-	# Asymmetric fork: the new timeline keeps only the forking player's planets
-	# (the opponent's are dropped) so the brancher opens a front they're ahead on.
+def test_branch_contestable_copies_whole_board():
+	# Default (contestable) fork: the new timeline copies BOTH players' planets, so the
+	# opponent can still defend across boards.
 	g = Game()
 	g.place(0, 0, 0)  # A in timeline 0
 	g.place(0, 1, 1)  # B in timeline 0
 	g.branch(0, 2, 2)  # A branches timeline 0 -> timeline 1, places at (2,2)
 	assert len(g.timelines) == 2
-	assert g.timelines[1][(0, 0)] is A  # A's stone carried over (inherited echo)
-	assert (1, 1) not in g.timelines[1]  # B's stone is NOT carried
+	assert g.timelines[1][(0, 0)] is A  # A's stone carried (inherited echo)
+	assert g.timelines[1][(1, 1)] is B  # B's stone carried too (contestable)
 	assert g.timelines[1][(2, 2)] is A  # newly placed
+
+
+def test_branch_asymmetric_drops_opponent():
+	# With fork_keep_opponent=False, the new timeline keeps only the brancher's planets.
+	g = Game(Config(fork_keep_opponent=False))
+	g.place(0, 0, 0)  # A
+	g.place(0, 1, 1)  # B
+	g.branch(0, 2, 2)  # A
+	assert g.timelines[1][(0, 0)] is A
+	assert (1, 1) not in g.timelines[1]  # B's stone dropped
+	assert g.timelines[1][(2, 2)] is A
 
 
 def test_branch_disabled():

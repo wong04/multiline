@@ -86,6 +86,27 @@ timelines. **branch** stays balanced (forking co-equal — ideal for teaching); 
 multiverse-centric (forking is the path), fitting "Full = the real game." Shipped rulesets:
 branch `win 4 / cross 3 / ≤3 TL`, full `win 5 / cross 3 / ≤4 TL`.
 
+## Update 2 — longer & deeper retune (2026-06-25)
+Feedback: games felt **too short and shallow** (~5–7 plies). Measured cause: the asymmetric
+fork made cross-wins an **uncontested race** — self-play ended in ~7 plies with **first-mover
+winning 100%** and nothing to defend. Sweep findings (`fork_value.py`, depth 1–2):
+
+| config | avg plies | first-mover WR | note |
+|---|---|---|---|
+| 8×8 5/3, **asymmetric** (old Full) | ~5–7 | **1.0** | short, unbalanced, uncontested |
+| 10×10 5/3, **contestable** (new Full) | ~9 @depth1, **very long @depth2** | — | depth-2 self-play too long to finish in budget = deep, contested games |
+
+So we **made forks contestable** (`fork_keep_opponent=True`, now the default): a fork copies
+the *whole* board, so the opponent defends across timelines → real calculation and ~2×+ longer
+games. The cross-length discount stays (cross 3 vs in-board 5) so forking remains a strong
+*advanced* option rather than a shallow auto-win. Shipped: **Full/quick-match = 10×10, 5 / 3,
+≤4 TL, contestable**; **Branching = 6×6, 4 / 3, ≤3 TL, contestable**.
+
+Caveat: measuring forking's value for contestable configs needs deeper search than was
+feasible to sweep here (a shallow bot under-uses forks); the choice rests on the length/balance
+data plus the design reasoning above. Revisit with a deeper-bot run or live feedback if forking
+feels under- or over-powered.
+
 ## Recommendation
 Prototype **A first** (cheap, measurable): make cross-timeline the efficient win and re-run
 `fork_value.py` — if forking starts winning and the AI starts branching, that may be enough.

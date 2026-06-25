@@ -4,10 +4,11 @@ A competitive multiverse line game inspired by *5D Chess with Multiverse Time Tr
 
 It's Gomoku played across parallel timelines you can spawn. Win by getting N stones in
 a row **within a board** — or, for **fewer** stones, **stepping diagonally across adjacent
-timelines**. Forking spins off a new timeline carrying **only your planets** (the opponent's
-are left behind), so a fork opens a fresh front you're ahead on; combined with the shorter
-cross-timeline win, that's what makes forking worth a turn. Every winning line must move
-through space, so trivial same-cell copies never win.
+timelines**. Forking spins off a copy of a board (both players' planets carry over), opening a
+new front your opponent must *also* defend; because cross-timeline rows are shorter, spreading
+threats across timelines is a real winning plan — but the opponent is present to contest it, so
+it rewards reading ahead. Every winning line must move through space, so trivial same-cell
+copies never win.
 
 ## Architecture
 - `src/engine/` — pure-Python rules (no web deps). The single source of truth.
@@ -71,8 +72,8 @@ Manual deploy any time: `railway up --service multiline`.
 ## Rulesets (accessibility ramp)
 - **Classic** — branching off; plain Gomoku, 5 in a row. Learn the base in seconds.
 - **Branching** — 6×6, 4 in a board or **3 across timelines**, up to 3 timelines. Learn to fork.
-- **Full** — 8×8, 5 in a board or **3 across timelines**, up to 4 timelines. The real game.
+- **Full** — 10×10, 5 in a board or **3 across timelines**, up to 4 timelines. The real game.
 
-Cross-timeline wins need fewer stones than in-board ones (`cross_win_length`), and forks carry
-only the brancher's planets — see [docs/forking-design.md](docs/forking-design.md) for the
-design rationale and the measured before/after.
+Cross-timeline wins need fewer stones than in-board ones (`cross_win_length`), and forks are
+**contestable** (they copy the whole board, so the opponent can defend across timelines) — see
+[docs/forking-design.md](docs/forking-design.md) for the design rationale and measurements.
