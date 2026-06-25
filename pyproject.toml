@@ -12,6 +12,7 @@ dependencies = [
 dev = [
 	"pytest>=8.3",
 	"httpx>=0.28",
+	"playwright>=1.60.0",
 ]
 
 [tool.pytest.ini_options]
