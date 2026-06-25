@@ -16,6 +16,30 @@ function wsUrl(path) {
 	return `${proto}://${location.host}${path}${sep}token=${encodeURIComponent(clientToken())}`;
 }
 
+const SESSION_KEY = "multiline-session";
+
+// Remember the current online room so an accidental reload can rejoin it (the seat is
+// kept server-side by clientToken). Only online/quick-match rooms are worth resuming.
+export function saveSession(code, mode) {
+	localStorage.setItem(SESSION_KEY, JSON.stringify({ code, mode }));
+}
+export function clearSession() {
+	localStorage.removeItem(SESSION_KEY);
+}
+export function loadSession() {
+	try {
+		return JSON.parse(localStorage.getItem(SESSION_KEY));
+	} catch {
+		return null;
+	}
+}
+
+export async function fetchRoom(code) {
+	const res = await fetch(`/api/rooms/${encodeURIComponent(code)}`);
+	if (!res.ok) return null;
+	return res.json();
+}
+
 export async function createRoom({ mode, config, aiDifficulty }) {
 	const res = await fetch("/api/rooms", {
 		method: "POST",

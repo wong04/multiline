@@ -3,9 +3,11 @@
 A competitive multiverse line game inspired by *5D Chess with Multiverse Time Travel*.
 
 It's Gomoku played across parallel timelines you can spawn. Win by getting N stones in
-a row **within a board** or **stepping diagonally across adjacent timelines**. Branching
-copies a timeline's stones forward (the "time travel" feel); a single uniform win rule
-requires every winning line to move through space, so trivial same-cell copies never win.
+a row **within a board** — or, for **fewer** stones, **stepping diagonally across adjacent
+timelines**. Forking spins off a new timeline carrying **only your planets** (the opponent's
+are left behind), so a fork opens a fresh front you're ahead on; combined with the shorter
+cross-timeline win, that's what makes forking worth a turn. Every winning line must move
+through space, so trivial same-cell copies never win.
 
 ## Architecture
 - `src/engine/` — pure-Python rules (no web deps). The single source of truth.
@@ -67,6 +69,10 @@ One-time setup:
 Manual deploy any time: `railway up --service multiline`.
 
 ## Rulesets (accessibility ramp)
-- **Classic** — branching off; plain Gomoku. Learn the base in seconds.
-- **Branching** — up to 3 timelines; learn the multiverse.
-- **Full** — up to 4 timelines.
+- **Classic** — branching off; plain Gomoku, 5 in a row. Learn the base in seconds.
+- **Branching** — 6×6, 4 in a board or **3 across timelines**, up to 3 timelines. Learn to fork.
+- **Full** — 8×8, 5 in a board or **3 across timelines**, up to 4 timelines. The real game.
+
+Cross-timeline wins need fewer stones than in-board ones (`cross_win_length`), and forks carry
+only the brancher's planets — see [docs/forking-design.md](docs/forking-design.md) for the
+design rationale and the measured before/after.

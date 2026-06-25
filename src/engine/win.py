@@ -41,19 +41,24 @@ def find_winning_line(
 	timelines: list[dict[tuple[int, int], Player]],
 	size: int,
 	win_length: int,
+	cross_win_length: int | None = None,
 ) -> WinningLine | None:
+	"""In-board lines (dl == 0) need `win_length`; lines stepping across timelines
+	(dl != 0) need `cross_win_length` (defaults to win_length)."""
+	cross_len = cross_win_length or win_length
 	count = len(timelines)
 	for origin_l, board in enumerate(timelines):
 		for (x, y), player in board.items():
 			for dx, dy, dl in _DIRECTIONS:
+				target = win_length if dl == 0 else cross_len
 				cells = [(x, y, origin_l)]
-				for k in range(1, win_length):
+				for k in range(1, target):
 					nx, ny, nl = x + dx * k, y + dy * k, origin_l + dl * k
 					if not (0 <= nx < size and 0 <= ny < size and 0 <= nl < count):
 						break
 					if timelines[nl].get((nx, ny)) != player:
 						break
 					cells.append((nx, ny, nl))
-				if len(cells) == win_length:
+				if len(cells) == target:
 					return WinningLine(player, cells)
 	return None

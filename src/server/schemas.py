@@ -9,6 +9,7 @@ AI_DIFFICULTIES = ("easy", "normal", "hard")
 class ConfigIn(BaseModel):
 	size: int = Field(default=5, ge=2, le=19)
 	winLength: int = Field(default=4, ge=3, le=19)
+	crossWinLength: int | None = Field(default=None, ge=3, le=19)
 	maxTimelines: int = Field(default=4, ge=1, le=6)
 	allowBranch: bool = True
 
@@ -16,6 +17,8 @@ class ConfigIn(BaseModel):
 	def _winnable(self) -> "ConfigIn":
 		if self.winLength > self.size:
 			raise ValueError("winLength cannot exceed board size")
+		if self.crossWinLength is not None and self.crossWinLength > self.winLength:
+			raise ValueError("crossWinLength cannot exceed winLength")
 		return self
 
 	def to_engine(self) -> Config:
@@ -24,6 +27,7 @@ class ConfigIn(BaseModel):
 			win_length=self.winLength,
 			max_timelines=self.maxTimelines,
 			allow_branch=self.allowBranch,
+			cross_win_length=self.crossWinLength,
 		)
 
 

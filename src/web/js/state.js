@@ -9,8 +9,10 @@ export const view = {
 	branchMode: false,
 	explain: false,
 	hover: null, // { l, x, y }
+	cursor: null, // { l, x, y } keyboard focus cell
 	intentional: false, // set when we close the socket on purpose
 	inTutorial: false,
+	tutorialTarget: null, // { l, x, y } cell highlighted during a tutorial puzzle
 };
 
 export function resetForConnect() {

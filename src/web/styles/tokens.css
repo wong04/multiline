@@ -7,7 +7,7 @@
 	--deep: #0f1f47; /* "window into space" board fill */
 	--deep-2: #163063;
 	--ink: #16224d; /* text on bright areas */
-	--ink-soft: #41507e;
+	--ink-soft: #36426b; /* darkened for AA contrast on cream/sky */
 	--cream: #fff7ef;
 	--white: #ffffff;
 
@@ -61,6 +61,10 @@ body {
 
 button, input, select { font-family: var(--ui); }
 .hidden { display: none !important; }
+.visually-hidden {
+	position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+	overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
 ::selection { background: var(--sun); color: var(--ink); }
 
 @media (prefers-reduced-motion: reduce) {
@@ -69,6 +73,12 @@ button, input, select { font-family: var(--ui); }
 		animation-iteration-count: 1 !important;
 		transition-duration: 0.01ms !important;
 	}
+	body { cursor: auto; }
+	#cursor { display: none; }
+}
+
+/* Touch devices have no hover/pointer — keep the native cursor, drop the blob. */
+@media (pointer: coarse) {
 	body { cursor: auto; }
 	#cursor { display: none; }
 }

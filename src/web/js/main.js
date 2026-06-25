@@ -58,6 +58,18 @@ function connectToRoom(code, showPill) {
 	ui.setRoomPill(showPill ? code : null);
 	ui.reflectBranchMode(false);
 	ui.reflectExplain(view.explain);
+	if (showPill) net.saveSession(code, view.mode || "online");  // online rooms can be rejoined
+}
+
+// On load, rejoin an online game left by an accidental reload (seat kept by token).
+async function attemptResume() {
+	const s = net.loadSession();
+	if (!s || !s.code) return;
+	const info = await net.fetchRoom(s.code).catch(() => null);
+	if (!info || (info.state && info.state.winner)) { net.clearSession(); return; }
+	view.mode = s.mode || "online";
+	connectToRoom(s.code, true);
+	ui.setHint("Reconnected to your game.");
 }
 
 function setBranchMode(on) {
@@ -107,6 +119,8 @@ function cancelQueue() { net.closeQueue(); ui.showWaiting(false); }
 function leave() {
 	net.closeRoom();
 	net.closeQueue();
+	net.clearSession();
+	view.tutorialTarget = null;
 	if (view.inTutorial) {
 		view.inTutorial = false;
 		document.getElementById("tutorial").classList.add("hidden");
@@ -134,24 +148,68 @@ function setupCanvas() {
 	});
 	canvas.addEventListener("mouseleave", () => { view.hover = null; render.render(); });
 	canvas.addEventListener("click", (ev) => {
-		if (!myTurn()) { ui.setHint("Not your turn yet!", true, 1800); return; }
 		const hit = render.eventCell(ev);
-		if (!hit || !isEmptyCell(hit.l, hit.x, hit.y)) return;
-		if (view.branchMode) {
-			if (view.game.timelines.length >= view.game.config.maxTimelines) {
-				ui.setHint("Timeline limit reached — can't fork more.", true);
-				return;
-			}
-			net.send({ type: "branch", source: hit.l, x: hit.x, y: hit.y });
-		} else {
-			net.send({ type: "place", timeline: hit.l, x: hit.x, y: hit.y });
-		}
+		if (hit) commitMove(hit.l, hit.x, hit.y);
 	});
+
+	// Keyboard play (accessibility): arrows move a cursor across cells/timelines, Enter commits.
+	canvas.addEventListener("focus", () => {
+		if (!view.cursor && view.game) {
+			const c = view.game.config.size >> 1;
+			view.cursor = { l: 0, x: c, y: c };
+		}
+		render.render();
+		announceCursor();
+	});
+	canvas.addEventListener("blur", () => render.render());
+	canvas.addEventListener("keydown", onBoardKey);
+}
+
+function commitMove(l, x, y) {
+	if (!myTurn()) { ui.setHint("Not your turn yet!", true, 1800); return; }
+	if (!isEmptyCell(l, x, y)) { ui.setHint("That spot's taken — pick an empty cell.", true, 1600); return; }
+	if (view.branchMode) {
+		if (view.game.timelines.length >= view.game.config.maxTimelines) {
+			ui.setHint("Timeline limit reached — can't fork more.", true);
+			return;
+		}
+		net.send({ type: "branch", source: l, x, y });
+	} else {
+		net.send({ type: "place", timeline: l, x, y });
+	}
+}
+
+function onBoardKey(e) {
+	if (!view.game) return;
+	const size = view.game.config.size;
+	const n = view.game.timelines.length;
+	let c = view.cursor || { l: 0, x: size >> 1, y: size >> 1 };
+	if (e.key === "ArrowUp") c = { ...c, y: Math.max(0, c.y - 1) };
+	else if (e.key === "ArrowDown") c = { ...c, y: Math.min(size - 1, c.y + 1) };
+	else if (e.key === "ArrowLeft") c = c.x > 0 ? { ...c, x: c.x - 1 } : (c.l > 0 ? { l: c.l - 1, x: size - 1, y: c.y } : c);
+	else if (e.key === "ArrowRight") c = c.x < size - 1 ? { ...c, x: c.x + 1 } : (c.l < n - 1 ? { l: c.l + 1, x: 0, y: c.y } : c);
+	else if (e.key === "Enter" || e.key === " ") { e.preventDefault(); commitMove(c.l, c.x, c.y); return; }
+	else return;
+	e.preventDefault();
+	view.cursor = c;
+	render.render();
+	announceCursor();
+}
+
+function announceCursor() {
+	const c = view.cursor;
+	if (!c || !view.game) return;
+	const live = document.getElementById("board-live");
+	if (!live) return;
+	const stone = view.game.timelines[c.l].find((s) => s.x === c.x && s.y === c.y);
+	const what = stone ? `${stone.player}'s planet${stone.inherited ? " (echo)" : ""}` : "empty";
+	live.textContent = `Timeline ${c.l}, column ${c.x + 1}, row ${c.y + 1}: ${what}`;
 }
 
 // ---------- playful atmosphere ----------
 function setupAtmosphere() {
-	if (reduced) return;
+	// Skip the blob/parallax on touch (no hover) and when motion is reduced.
+	if (reduced || window.matchMedia("(pointer: coarse)").matches) return;
 	const cursor = document.getElementById("cursor");
 	const scene = document.querySelector(".scene");
 	let raf = null, mx = 0, my = 0;
@@ -214,13 +272,17 @@ function boot() {
 			return net.createRoom({ mode: "hotseat", config: ui.RULESETS[ruleset], aiDifficulty: "normal" })
 				.then((code) => connectToRoom(code, false));
 		},
-		exit: () => { view.inTutorial = false; net.closeRoom(); ui.showLobby(); ui.setRoomPill(null); },
+		play: (move) => net.send(move),
+		exit: () => { view.inTutorial = false; view.tutorialTarget = null; net.closeRoom(); ui.showLobby(); ui.setRoomPill(null); },
 	});
 	setupCanvas();
 	setupAtmosphere();
+	window.addEventListener("resize", () => { if (view.game) render.render(); });
 
 	// Read-only hook for the playtest harness: inspect state + locate cells. No behaviour change.
 	window.__multiline = { view, cellPoint: render.cellClientPoint };
+
+	attemptResume();
 
 	const loader = document.getElementById("loader");
 	const hide = () => loader && loader.classList.add("gone");

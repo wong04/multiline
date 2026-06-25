@@ -26,12 +26,20 @@ export function initCanvas(el) {
 
 function computeLayout() {
 	const size = view.game.config.size;
-	CELL = size >= 12 ? 34 : size >= 9 ? 44 : 52;
-	const boardPx = size * CELL;
 	const n = view.game.timelines.length;
-	const rowH = LABEL + boardPx;
 	const cols = Math.min(n, 2);
 	const rows = Math.ceil(n / 2);
+	CELL = size >= 12 ? 34 : size >= 9 ? 44 : 52;
+	// Shrink cells so the whole layout fits the container width (no overflow / CSS scaling,
+	// which would break pixel->cell hit-testing). Keeps the board playable on phones.
+	const avail = (canvas.parentElement && canvas.parentElement.clientWidth) || 0;
+	if (avail > 60) {
+		const maxBoardPx = (avail - PAD * 2 - (cols - 1) * GAP) / cols;
+		const maxCell = Math.floor(maxBoardPx / size);
+		if (maxCell >= 14 && maxCell < CELL) CELL = maxCell;
+	}
+	const boardPx = size * CELL;
+	const rowH = LABEL + boardPx;
 	layout = [];
 	for (let l = 0; l < n; l++) {
 		const col = l % 2, row = Math.floor(l / 2);
@@ -81,10 +89,11 @@ export function render() {
 	if (!view.game) return;
 	computeLayout();
 	draw(performance.now());
+	if (view.tutorialTarget) ensureLoop();
 }
 
 function ensureLoop() { if (!rafQueued) { rafQueued = true; requestAnimationFrame(frame); } }
-function frame(now) { rafQueued = false; draw(now); if (anim || pops.length) ensureLoop(); }
+function frame(now) { rafQueued = false; draw(now); if (anim || pops.length || view.tutorialTarget) ensureLoop(); }
 
 function draw(now) {
 	const g = view.game;
@@ -121,6 +130,33 @@ function draw(now) {
 		ctx.globalAlpha = 0.45;
 		drawOrb(cx, cy, g.current, false, 1, view.branchMode);
 		ctx.globalAlpha = 1;
+	}
+
+	const cur = view.cursor;
+	if (cur && layout[cur.l] && canvas === document.activeElement) {
+		const { cx, cy } = cellCenter(cur.l, cur.x, cur.y);
+		if (myTurn() && isEmpty(cur.l, cur.x, cur.y)) {
+			ctx.globalAlpha = 0.4;
+			drawOrb(cx, cy, g.current, false, 1, view.branchMode);
+			ctx.globalAlpha = 1;
+		}
+		ctx.save();
+		ctx.strokeStyle = "#16224d"; ctx.lineWidth = 3;
+		ctx.strokeRect(cx - CELL / 2 + 2, cy - CELL / 2 + 2, CELL - 4, CELL - 4);
+		ctx.restore();
+	}
+
+	const tgt = view.tutorialTarget;
+	if (tgt && layout[tgt.l] && isEmpty(tgt.l, tgt.x, tgt.y)) {
+		const { cx, cy } = cellCenter(tgt.l, tgt.x, tgt.y);
+		const pulse = 0.5 + 0.5 * Math.sin(now / 250);
+		ctx.save();
+		ctx.strokeStyle = "#ffe24a";
+		ctx.lineWidth = 3;
+		ctx.globalAlpha = 0.4 + 0.5 * pulse;
+		ctx.setLineDash([4, 4]);
+		ctx.beginPath(); ctx.arc(cx, cy, CELL / 2 - 3, 0, Math.PI * 2); ctx.stroke();
+		ctx.restore();
 	}
 
 	if (g.winningLine) {

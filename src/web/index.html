@@ -64,9 +64,9 @@
 					<div class="field">
 						<label>Opponent</label>
 						<div class="segmented" id="mode" role="group">
-							<button type="button" data-mode="ai" class="active">🤖 Computer</button>
-							<button type="button" data-mode="hotseat">🛋 Hotseat</button>
-							<button type="button" data-mode="online">🌍 Online</button>
+							<button type="button" data-mode="ai" class="active"><span aria-hidden="true">🤖</span> Computer</button>
+							<button type="button" data-mode="hotseat"><span aria-hidden="true">🛋</span> Hotseat</button>
+							<button type="button" data-mode="online"><span aria-hidden="true">🌍</span> Online</button>
 						</div>
 						<p class="field-note" id="mode-note"></p>
 					</div>
@@ -86,13 +86,13 @@
 				<div class="or-line"><span>or</span></div>
 
 				<div class="console-foot">
-					<button id="quickmatch" class="ghost">🛰 Find an opponent</button>
+					<button id="quickmatch" class="ghost"><span aria-hidden="true">🛰</span> Find an opponent</button>
 					<div class="join">
 						<input id="join-code" maxlength="5" placeholder="CODE" aria-label="Room code" />
 						<button id="join" class="ghost">Join ▸</button>
 					</div>
-					<button id="tutorial-start" class="link">✺ New here? Learn to play</button>
-					<button id="rulebook-open" class="link">📖 Rulebook</button>
+					<button id="tutorial-start" class="link"><span aria-hidden="true">✺</span> New here? Learn to play</button>
+					<button id="rulebook-open" class="link"><span aria-hidden="true">📖</span> Rulebook</button>
 				</div>
 			</section>
 
@@ -116,8 +116,10 @@
 				<div id="hint" class="hint"></div>
 
 				<div class="table-wrap">
-					<canvas id="board"></canvas>
+					<canvas id="board" tabindex="0" role="application"
+						aria-label="Game board. Arrow keys move the cursor across cells and timelines; Enter places a planet (or forks when Fork is on)."></canvas>
 				</div>
+				<div id="board-live" class="visually-hidden" aria-live="polite"></div>
 
 				<div class="legend">
 					<span><i class="swatch aurora"></i> Player A</span>
@@ -147,19 +149,41 @@
 			<p>Click an empty cell to drop your planet. Players alternate.</p>
 
 			<h3>Forking timelines 🔀</h3>
-			<p>Turn on <strong>Fork</strong>, then click an empty cell to spin off a <em>new timeline</em> —
-			a copy of that board. Copied planets appear as faded <strong>echoes</strong>; ones you place
-			are bright. You can fork up to the timeline limit of the ruleset.</p>
+			<p>Turn on <strong>Fork</strong>, then click an empty cell to spin off a <em>new timeline</em>.
+			The new board carries over <strong>only your planets</strong> (as faded <strong>echoes</strong>) —
+			your opponent's are left behind, so a fork is a fresh front where <em>you're ahead</em>.
+			You can fork up to the timeline limit of the ruleset.</p>
 
 			<h3>Winning across timelines ✨</h3>
-			<p>A winning row can step from one board into the timeline next to it. You need as many
-			timelines as your target row length (e.g. 4-in-a-row needs 4 boards in a diagonal).</p>
+			<p>A winning row can step diagonally from one board into the timeline next to it — and a
+			cross-timeline row needs <strong>fewer</strong> planets than an in-board one (e.g. 5 in a
+			board, but just 3 across timelines). That's the fast lane to victory.</p>
+
+			<h3>Why fork? 🤔</h3>
+			<p>Because the opponent's planets don't follow you, a fork hands you a board you're winning
+			on, and cross-timeline rows are shorter — so forking makes a threat they have to chase
+			across boards while you race a diagonal they can't all block.</p>
+			<svg class="fork-diagram" viewBox="0 0 220 80" role="img"
+				aria-label="A diagonal winning row stepping across three boards.">
+				<g fill="none" stroke="#16224d" stroke-width="2">
+					<rect x="2" y="20" width="40" height="40" rx="6" fill="#163063"/>
+					<rect x="90" y="20" width="40" height="40" rx="6" fill="#163063"/>
+					<rect x="178" y="20" width="40" height="40" rx="6" fill="#163063"/>
+				</g>
+				<g stroke="#ffe24a" stroke-width="3" stroke-dasharray="3 4" fill="none">
+					<line x1="42" y1="52" x2="90" y2="36"/>
+					<line x1="130" y1="36" x2="178" y2="28"/>
+				</g>
+				<circle cx="12" cy="52" r="7" fill="#37d0ff" stroke="#16224d" stroke-width="2"/>
+				<circle cx="110" cy="36" r="7" fill="#37d0ff" stroke="#16224d" stroke-width="2"/>
+				<circle cx="200" cy="28" r="7" fill="#37d0ff" stroke="#16224d" stroke-width="2"/>
+			</svg>
 
 			<h3>Rulesets</h3>
 			<ul>
-				<li><strong>Classic</strong> — one board, 5 in a row. Just the basics.</li>
-				<li><strong>Branching</strong> — small board, 3 in a row, up to 3 timelines. Easy forks.</li>
-				<li><strong>Full</strong> — 8×8, 4 in a row, up to 4 timelines. The real game.</li>
+				<li><strong>Classic</strong> — one board, 5 in a row. Just the basics, no forking.</li>
+				<li><strong>Branching</strong> — 6×6, 4 in a board <em>or 3 across timelines</em>, up to 3 timelines. Learn to fork.</li>
+				<li><strong>Full</strong> — 8×8, 5 in a board <em>or 3 across timelines</em>, up to 4 timelines. The real game.</li>
 			</ul>
 
 			<h3>Modes</h3>

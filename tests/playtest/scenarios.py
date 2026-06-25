@@ -341,15 +341,34 @@ def scenario_tutorial(args) -> None:
 		rec.shot("lesson2-result")
 		page.click("#tutorial-next", force=True)
 
-		# Lesson 3: capture only, then Finish.
+		# Lesson 3: the guided fork-to-win puzzle. Wait for the scripted setup to seed the
+		# position + reveal the target, then fork the target cell and expect a cross win.
 		capture(3)
+		target = None
+		for _ in range(40):
+			target = page.evaluate("() => window.__multiline.view.tutorialTarget")
+			if target:
+				break
+			page.wait_for_timeout(200)
+		rec.shot("lesson3-puzzle")
+		l3_solved = False
+		if target:
+			gv.set_branch(True)
+			gv.click_cell(target["l"], target["x"], target["y"])
+			page.wait_for_timeout(700)
+			final = gv.state() or {}
+			win = final.get("winningLine") or []
+			l3_solved = bool(final.get("winner")) and len({c["l"] for c in win}) > 1
+		rec.shot("lesson3-result")
 		page.click("#tutorial-next", force=True)  # "Finish"
 		page.wait_for_timeout(800)
 		back_to_lobby = page.is_visible("#console:not(.hidden)")
 		rec.shot("after-finish")
 		_out("tutorial", {
 			"lessons": lessons, "lesson1_win_detected": l1_solved,
-			"lesson2_fork_detected": l2_solved, "returned_to_lobby": back_to_lobby,
+			"lesson2_fork_detected": l2_solved,
+			"lesson3_target_shown": bool(target), "lesson3_fork_win": l3_solved,
+			"returned_to_lobby": back_to_lobby,
 		})
 	finally:
 		ctx.close(); br.close(); pw.stop()

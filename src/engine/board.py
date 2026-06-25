@@ -23,6 +23,13 @@ class Config:
 	win_length: int = 4
 	max_timelines: int = 4
 	allow_branch: bool = True
+	# A line that steps across timelines may win with fewer stones than an in-board line,
+	# so the extra dimension is worth using. None => same as win_length (no cross discount).
+	cross_win_length: int | None = None
+
+	@property
+	def cross_len(self) -> int:
+		return self.cross_win_length or self.win_length
 
 
 class Game:
@@ -56,7 +63,9 @@ class Game:
 		self._after_move()
 
 	def branch(self, source: int, x: int, y: int) -> None:
-		"""Fork a copy of `source` and place the current player's stone into it."""
+		"""Fork `source` into a fresh timeline carrying only the current player's planets,
+		then place their stone. Dropping the opponent's stones makes the fork a new front
+		where the brancher is ahead — that's what makes forking worth a tempo."""
 		if self.over:
 			raise IllegalMove("game is already over")
 		if not self.config.allow_branch:
@@ -67,10 +76,11 @@ class Game:
 			raise IllegalMove(f"no timeline {source}")
 		if not self._in_bounds(x, y):
 			raise IllegalMove(f"({x}, {y}) is off the board")
-		if (x, y) in self.timelines[source]:
-			raise IllegalMove(f"({x}, {y}) is occupied in source timeline {source}")
-		inherited_keys = set(self.timelines[source].keys())
-		new_timeline = dict(self.timelines[source])
+		mine = {pos: p for pos, p in self.timelines[source].items() if p is self.current}
+		if (x, y) in mine:
+			raise IllegalMove(f"({x}, {y}) is occupied in timeline {source}")
+		inherited_keys = set(mine.keys())
+		new_timeline = dict(mine)
 		new_timeline[(x, y)] = self.current
 		self.timelines.append(new_timeline)
 		self.inherited.append(inherited_keys)
@@ -87,7 +97,9 @@ class Game:
 		return clone
 
 	def _after_move(self) -> None:
-		line = find_winning_line(self.timelines, self.config.size, self.config.win_length)
+		line = find_winning_line(
+			self.timelines, self.config.size, self.config.win_length, self.config.cross_len
+		)
 		if line is not None:
 			self.winner = line.player
 			self.winning_line = line
@@ -99,6 +111,7 @@ class Game:
 			"config": {
 				"size": self.config.size,
 				"winLength": self.config.win_length,
+				"crossWinLength": self.config.cross_len,
 				"maxTimelines": self.config.max_timelines,
 				"allowBranch": self.config.allow_branch,
 			},

@@ -17,7 +17,9 @@ from pathlib import Path
 
 from playwright.sync_api import Page, sync_playwright
 
-LIVE_URL = "https://multiline-production.up.railway.app"
+import os
+
+LIVE_URL = os.environ.get("MULTILINE_URL", "https://multiline-production.up.railway.app")
 ARTIFACTS = Path(__file__).resolve().parent / "artifacts"
 
 RULESETS = ("classic", "branch", "full")

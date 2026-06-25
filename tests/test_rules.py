@@ -27,14 +27,16 @@ def test_off_board_rejected():
 		g.place(0, 5, 0)
 
 
-def test_branch_copies_source_stones():
+def test_branch_carries_only_brancher_stones():
+	# Asymmetric fork: the new timeline keeps only the forking player's planets
+	# (the opponent's are dropped) so the brancher opens a front they're ahead on.
 	g = Game()
 	g.place(0, 0, 0)  # A in timeline 0
 	g.place(0, 1, 1)  # B in timeline 0
 	g.branch(0, 2, 2)  # A branches timeline 0 -> timeline 1, places at (2,2)
 	assert len(g.timelines) == 2
-	assert g.timelines[1][(0, 0)] is A  # inherited
-	assert g.timelines[1][(1, 1)] is B  # inherited
+	assert g.timelines[1][(0, 0)] is A  # A's stone carried over (inherited echo)
+	assert (1, 1) not in g.timelines[1]  # B's stone is NOT carried
 	assert g.timelines[1][(2, 2)] is A  # newly placed
 
 

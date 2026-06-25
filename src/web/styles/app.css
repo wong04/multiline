@@ -124,6 +124,13 @@ select {
 }
 select:focus { outline: none; border-color: var(--p-a-deep); }
 
+/* Keyboard focus ring for every interactive control (mouse clicks stay clean). */
+:focus-visible { outline: 3px solid var(--p-a-deep); outline-offset: 3px; }
+.primary:focus-visible, .ghost:focus-visible, .chip:focus-visible,
+.segmented button:focus-visible, .link:focus-visible, .help-sticker:focus-visible {
+	outline: 3px solid var(--ink); outline-offset: 3px;
+}
+
 .segmented {
 	display: flex;
 	gap: 6px;
@@ -267,6 +274,9 @@ select:focus { outline: none; border-color: var(--p-a-deep); }
 .table-wrap {
 	overflow: auto;
 	padding: 0.6rem;
+	min-height: 180px;
+	display: grid;
+	place-items: center;
 	border-radius: var(--radius);
 	background: var(--deep);
 	border: 3px solid var(--ink);
@@ -287,6 +297,17 @@ canvas { display: block; margin: 0 auto; }
 
 .stage-foot { margin-top: 1rem; min-height: 1.4rem; text-align: center; }
 #waiting-banner { font-weight: 700; color: var(--ink); }
+
+.fork-diagram {
+	display: block;
+	width: 100%;
+	max-width: 320px;
+	margin: 0.2rem auto 0.6rem;
+	background: var(--cream);
+	border: 2.5px solid var(--ink);
+	border-radius: var(--radius);
+	padding: 6px;
+}
 
 /* ============ tutorial ============ */
 .tutorial {

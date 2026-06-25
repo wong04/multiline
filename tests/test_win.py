@@ -48,6 +48,16 @@ def test_same_cell_across_timelines_does_not_win():
 	assert find_winning_line(tls, size=5, win_length=4) is None
 
 
+def test_cross_win_length_shorter_than_in_board():
+	# With cross_win_length=3, a 3-step cross-timeline diagonal wins...
+	tls = [board((0, 0, A)), board((1, 1, A)), board((2, 2, A))]
+	win = find_winning_line(tls, size=5, win_length=4, cross_win_length=3)
+	assert win is not None and len({c[2] for c in win.cells}) == 3
+	# ...but an in-board line of 3 does NOT (in-board still needs win_length=4).
+	tl = board((0, 0, A), (1, 0, A), (2, 0, A))
+	assert find_winning_line([tl], size=5, win_length=4, cross_win_length=3) is None
+
+
 def test_cross_timeline_needs_adjacent_timelines():
 	# same diagonal but a gap in timeline index breaks the run
 	tls = [

@@ -2,6 +2,24 @@
 
 _Date: 2026-06-25 · Target: live site `https://multiline-production.up.railway.app`_
 
+## Update — addressed in this pass (2026-06-25)
+- **P0 keyboard play + screen-reader mirror** — board is now focusable; arrow keys move a
+  cursor across cells/timelines, Enter places/forks; an `aria-live` region announces cursor
+  cell + turn/win. (verified: `keyboard_check.py`)
+- **P1 reconnect** — the room code is persisted; a reload auto-rejoins the live game with the
+  seat + board intact. (verified: `reconnect` scenario → `auto_rejoined_table: true`)
+- **P1 responsive canvas** — cells shrink to fit the container, so the board fits a phone
+  without overflow. (verified: `mobile_check.py` → `canvas_fits_wrap: true`)
+- **A11y-3/4** native cursor restored on touch + focus-visible rings + rulebook focus-trap.
+- **Onboarding-1/2** terminology unified (planets/Fork); tutorial shows each lesson's goal.
+- **Difficulty-1** "easy" now beatable by a trying beginner (98% classic / 68% full) while
+  normal still wins. **UX-1** occupied-cell feedback. **Contrast-1** + emoji `aria-hidden`.
+- **Forking made meaningful** (was measured as worthless): cross-timeline wins need fewer
+  stones and forks are asymmetric; a guided fork-to-win tutorial teaches the why. See
+  [forking-design.md](forking-design.md).
+
+Still open: opponent-desertion notice (MP-2), and the P2/P3 polish items below.
+
 ## How this was tested
 Five "player" personas drove a **real Chromium browser** against the live site via a
 Playwright harness (`tests/playtest/`). Personas: **beginner** (random legal moves),
@@ -117,6 +135,29 @@ rule (an earlier agent guess to the contrary was wrong). Net effect: balance num
 - "Now you're playing 5-dimensionally" (`tutorial.js:25`) is cute but unexplained.
 - Tutorial card (`position:fixed` bottom) can overlap the lower board rows on short screens.
 - `--win #ffe24a` and `--sun #ffd23f` are near-identical yellows (colorblind clarity).
+
+---
+
+## Forking value — measured (2026-06-25, `tests/playtest/fork_value.py`)
+Prompted by a friend finding "why fork?" confusing. Engine-level experiment with the real
+branch-aware AI at `normal` depth:
+
+| ruleset | branch-aware vs place-only (winrate) | AI's branch-move share | cross-timeline win share | avg plies/game |
+|---|---|---|---|---|
+| branch (6×6, win 3) | **0.50** (20–20) | **0%** | **0%** | ~5 |
+| full (8×8, win 4) | **0.50** (20–20) | 0% | 0% | — |
+
+**Finding:** forking currently provides **no measurable advantage** — forbidding it entirely
+changes nothing (50/50), the AI **never chooses to fork**, and **zero** wins are cross-
+timeline. Games are decided by quick in-board lines (≈5 plies) before a fork could pay off.
+So the "why fork?" confusion is **partly justified by design**, not just under-explained:
+teaching it as powerful would oversell it. Caveat: measured through one AI's evaluation, but
+it aligns with the human feedback and the earlier "branching felt ignorable" note.
+
+**Implication:** decide teach-vs-tweak before building the fork tutorial (see plan). Likely a
+small design tweak is needed to make forking worth a tempo (e.g., make in-board wins harder so
+the extra dimension matters, reward cross-timeline lines, or shrink boards relative to win
+length), then teach it.
 
 ---
 

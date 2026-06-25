@@ -3,8 +3,8 @@ import { view } from "./state.js";
 
 export const RULESETS = {
 	classic: { size: 15, winLength: 5, maxTimelines: 1, allowBranch: false },
-	branch: { size: 6, winLength: 3, maxTimelines: 3, allowBranch: true },
-	full: { size: 8, winLength: 4, maxTimelines: 4, allowBranch: true },
+	branch: { size: 6, winLength: 4, crossWinLength: 3, maxTimelines: 3, allowBranch: true },
+	full: { size: 8, winLength: 5, crossWinLength: 3, maxTimelines: 4, allowBranch: true },
 };
 
 const RULESET_NOTE = {
@@ -68,13 +68,31 @@ export function initUI(actions) {
 	els.tutorialStart.addEventListener("click", actions.help);
 	els.waitingCancel.addEventListener("click", actions.cancelQueue);
 
-	const openBook = () => els.rulebook.classList.remove("hidden");
-	const closeBook = () => els.rulebook.classList.add("hidden");
+	let lastFocus = null;
+	const openBook = () => {
+		lastFocus = document.activeElement;
+		els.rulebook.classList.remove("hidden");
+		els.rulebookClose.focus();
+		document.addEventListener("keydown", onBookKey);
+	};
+	const closeBook = () => {
+		els.rulebook.classList.add("hidden");
+		document.removeEventListener("keydown", onBookKey);
+		if (lastFocus && lastFocus.focus) lastFocus.focus();
+	};
+	const onBookKey = (e) => {
+		if (e.key === "Escape") { closeBook(); return; }
+		if (e.key !== "Tab") return;
+		const f = els.rulebook.querySelectorAll('button, a, [href], [tabindex]:not([tabindex="-1"])');
+		if (!f.length) return;
+		const first = f[0], last = f[f.length - 1];
+		if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+		else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+	};
 	els.rulebookOpen.addEventListener("click", openBook);
 	els.rulesChip.addEventListener("click", openBook);
 	els.rulebookClose.addEventListener("click", closeBook);
 	els.rulebook.addEventListener("click", (e) => { if (e.target === els.rulebook) closeBook(); });
-	document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeBook(); });
 }
 
 function bindSegmented(group, attr, onPick) {
@@ -102,7 +120,11 @@ export function showLobby() {
 	document.body.classList.remove("playing");
 }
 
-export function setStatus(text) { els.status.textContent = text; }
+export function setStatus(text) {
+	els.status.textContent = text;
+	const live = document.getElementById("board-live");
+	if (live) live.textContent = text;  // mirror turn/win to screen readers
+}
 
 export function setHint(text, warn = false, ms = 3800) {
 	els.hint.textContent = text;
@@ -132,7 +154,10 @@ export function updateBar() {
 	const g = view.game;
 	if (!g) return;
 	els.branchToggle.classList.toggle("hidden", !g.config.allowBranch);
-	els.goal.textContent = `${g.config.winLength} in a row`;
+	const cross = g.config.crossWinLength;
+	els.goal.textContent = cross && cross < g.config.winLength
+		? `${g.config.winLength} in a row — or just ${cross} across timelines`
+		: `${g.config.winLength} in a row`;
 
 	if (els.dot) els.dot.style.background = g.current === "A" ? "var(--p-a)" : "var(--p-b)";
 

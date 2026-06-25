@@ -38,7 +38,10 @@ def choose_move(game: Game, difficulty: str = "normal") -> Move | None:
 		alpha = max(alpha, val)
 
 	if difficulty == "easy":
-		# Pick randomly among near-best moves so easy feels less robotic.
+		# Easy should be beatable by a flailing beginner: over half the time play a
+		# genuinely random legal move (a real blunder), otherwise a near-best move.
+		if random.random() < 0.55:
+			return random.choice(legal_moves(game))
 		good = [m for m in moves if _minimax(_apply(game, m), 0, float("-inf"), float("inf"), me) >= best_val - 1]
 		return random.choice(good) if good else best
 	return best
@@ -131,9 +134,14 @@ def _evaluate(game: Game, me: Player) -> float:
 
 
 def _player_score(game: Game, p: Player) -> float:
-	"""Sum over windows containing only `p` stones (and empties), weighted by count."""
+	"""Sum over windows containing only `p` stones (and empties), weighted by count.
+
+	Cross-timeline windows (dl != 0) use the shorter cross length, so a near-complete
+	cross threat is scored relative to *its* shorter target — making forks attractive.
+	"""
 	size = game.config.size
-	win = game.config.win_length
+	win_in = game.config.win_length
+	cross = game.config.cross_len
 	count_tl = len(game.timelines)
 	score = 0.0
 	seen: set[tuple] = set()
@@ -142,15 +150,18 @@ def _player_score(game: Game, p: Player) -> float:
 			if owner is not p:
 				continue
 			for dx, dy, dl in _DIRECTIONS:
-				for off in range(win):
+				target = win_in if dl == 0 else cross
+				for off in range(target):
 					sx, sy, sl = x - off * dx, y - off * dy, l - off * dl
 					key = (sx, sy, sl, dx, dy, dl)
 					if key in seen:
 						continue
 					seen.add(key)
-					mine = _window_score(game, sx, sy, sl, dx, dy, dl, win, p, size, count_tl)
+					mine = _window_score(game, sx, sy, sl, dx, dy, dl, target, p, size, count_tl)
 					if mine > 0:
-						score += 10 ** (mine - 1)
+						# Weight by closeness to this window's target (cross targets are shorter,
+						# so a 2/3 cross threat outranks a 2/5 in-board one).
+						score += 10 ** mine * (mine / target)
 	return score
 
 
