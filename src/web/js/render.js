@@ -133,7 +133,7 @@ function draw(now) {
 	}
 
 	const cur = view.cursor;
-	if (cur && layout[cur.l] && canvas === document.activeElement) {
+	if (cur && view.kbNav && layout[cur.l] && canvas === document.activeElement) {
 		const { cx, cy } = cellCenter(cur.l, cur.x, cur.y);
 		if (myTurn() && isEmpty(cur.l, cur.x, cur.y)) {
 			ctx.globalAlpha = 0.4;

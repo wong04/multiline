@@ -10,6 +10,7 @@ export const view = {
 	explain: false,
 	hover: null, // { l, x, y }
 	cursor: null, // { l, x, y } keyboard focus cell
+	kbNav: false, // true only while navigating by keyboard (hides cursor for mouse users)
 	intentional: false, // set when we close the socket on purpose
 	inTutorial: false,
 	tutorialTarget: null, // { l, x, y } cell highlighted during a tutorial puzzle

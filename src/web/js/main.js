@@ -141,6 +141,7 @@ function setupCanvas() {
 	const canvas = document.getElementById("board");
 	render.initCanvas(canvas);
 	canvas.addEventListener("mousemove", (ev) => {
+		view.kbNav = false;  // mouse takes over — hide the keyboard cursor
 		view.hover = render.eventCell(ev);
 		const over = view.hover && view.game && isEmptyCell(view.hover.l, view.hover.x, view.hover.y) && myTurn();
 		if (over && view.explain) {
@@ -188,6 +189,7 @@ function onBoardKey(e) {
 	const size = view.game.config.size;
 	const n = view.game.timelines.length;
 	let c = view.cursor || { l: 0, x: size >> 1, y: size >> 1 };
+	view.kbNav = true;  // keyboard navigation active — reveal the cursor
 	if (e.key === "ArrowUp") c = { ...c, y: Math.max(0, c.y - 1) };
 	else if (e.key === "ArrowDown") c = { ...c, y: Math.min(size - 1, c.y + 1) };
 	else if (e.key === "ArrowLeft") c = c.x > 0 ? { ...c, x: c.x - 1 } : (c.l > 0 ? { l: c.l - 1, x: size - 1, y: c.y } : c);
