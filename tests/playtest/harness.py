@@ -67,7 +67,8 @@ class Lobby:
 		self.page.wait_for_timeout(1200)
 
 	def pick_ruleset(self, ruleset: str) -> None:
-		self.page.select_option("#ruleset", ruleset)
+		self.page.click("#ruleset-trigger")
+		self.page.click(f'#ruleset-list li[data-value="{ruleset}"]')
 
 	def pick_mode(self, mode: str) -> None:
 		self.page.click(f'#mode button[data-mode="{mode}"]')

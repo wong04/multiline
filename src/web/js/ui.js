@@ -26,7 +26,8 @@ let hintTimer = null;
 export function initUI(actions) {
 	els = {
 		console: $("console"), table: $("table"),
-		ruleset: $("ruleset"), rulesetNote: $("ruleset-note"),
+		rulesetTrigger: $("ruleset-trigger"), rulesetList: $("ruleset-list"),
+		rulesetCurrent: $("ruleset-current"), rulesetDD: $("ruleset-dd"), rulesetNote: $("ruleset-note"),
 		mode: $("mode"), modeNote: $("mode-note"),
 		difficultyField: $("difficulty-field"), difficulty: $("difficulty"),
 		begin: $("begin"), quickmatch: $("quickmatch"),
@@ -41,10 +42,7 @@ export function initUI(actions) {
 		rulebookClose: $("rulebook-close"), rulesChip: $("rules-chip"),
 	};
 
-	els.ruleset.addEventListener("change", () => {
-		sel.ruleset = els.ruleset.value;
-		els.rulesetNote.textContent = RULESET_NOTE[sel.ruleset];
-	});
+	initRulesetDropdown();
 	els.rulesetNote.textContent = RULESET_NOTE[sel.ruleset];
 	els.modeNote.textContent = MODE_NOTE[sel.mode];
 
@@ -93,6 +91,67 @@ export function initUI(actions) {
 	els.rulesChip.addEventListener("click", openBook);
 	els.rulebookClose.addEventListener("click", closeBook);
 	els.rulebook.addEventListener("click", (e) => { if (e.target === els.rulebook) closeBook(); });
+}
+
+// Thematic ruleset picker: a custom listbox so the open list matches the clay theme
+// (native <select> popups can't be styled). Keyboard-accessible (arrows/Enter/Esc/Home/End).
+function initRulesetDropdown() {
+	const trigger = els.rulesetTrigger, list = els.rulesetList, dd = els.rulesetDD;
+	const opts = Array.from(list.querySelectorAll("li[role=option]"));
+	let activeIdx = opts.findIndex((o) => o.getAttribute("aria-selected") === "true");
+	if (activeIdx < 0) activeIdx = 0;
+
+	const isOpen = () => !list.hidden;
+	const setActive = (i) => {
+		activeIdx = (i + opts.length) % opts.length;
+		opts.forEach((o, n) => o.classList.toggle("active", n === activeIdx));
+		list.setAttribute("aria-activedescendant", opts[activeIdx].id);
+		opts[activeIdx].scrollIntoView({ block: "nearest" });
+	};
+	const open = () => {
+		if (isOpen()) return;
+		list.hidden = false;
+		dd.classList.add("open");
+		trigger.setAttribute("aria-expanded", "true");
+		setActive(opts.findIndex((o) => o.dataset.value === sel.ruleset));
+		document.addEventListener("pointerdown", onOutside, true);
+		list.focus();
+	};
+	const close = () => {
+		if (!isOpen()) return;
+		list.hidden = true;
+		dd.classList.remove("open");
+		trigger.setAttribute("aria-expanded", "false");
+		list.removeAttribute("aria-activedescendant");
+		opts.forEach((o) => o.classList.remove("active"));
+		document.removeEventListener("pointerdown", onOutside, true);
+	};
+	const onOutside = (e) => { if (!dd.contains(e.target)) close(); };
+	const pick = (opt) => {
+		sel.ruleset = opt.dataset.value;
+		opts.forEach((o) => o.setAttribute("aria-selected", String(o === opt)));
+		els.rulesetCurrent.textContent = `${opt.querySelector(".opt-name").textContent} · ${opt.querySelector(".opt-note").textContent}`;
+		els.rulesetNote.textContent = RULESET_NOTE[sel.ruleset];
+		close();
+		trigger.focus();
+	};
+
+	trigger.addEventListener("click", () => (isOpen() ? close() : open()));
+	trigger.addEventListener("keydown", (e) => {
+		if (e.key === "ArrowDown" || e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); }
+	});
+	list.addEventListener("keydown", (e) => {
+		if (e.key === "ArrowDown") { e.preventDefault(); setActive(activeIdx + 1); }
+		else if (e.key === "ArrowUp") { e.preventDefault(); setActive(activeIdx - 1); }
+		else if (e.key === "Home") { e.preventDefault(); setActive(0); }
+		else if (e.key === "End") { e.preventDefault(); setActive(opts.length - 1); }
+		else if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(opts[activeIdx]); }
+		else if (e.key === "Escape") { e.preventDefault(); close(); trigger.focus(); }
+	});
+	opts.forEach((opt) => {
+		opt.addEventListener("click", () => pick(opt));
+		opt.addEventListener("pointermove", () => setActive(opts.indexOf(opt)));
+	});
 }
 
 function bindSegmented(group, attr, onPick) {

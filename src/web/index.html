@@ -60,13 +60,22 @@
 
 				<div class="console-grid">
 					<div class="field">
-						<label for="ruleset">Ruleset</label>
-						<div class="select-wrap">
-							<select id="ruleset">
-								<option value="classic">Classic · plain lines</option>
-								<option value="branch">Branching · learn timelines</option>
-								<option value="full" selected>Full · the real game</option>
-							</select>
+						<label id="ruleset-label">Ruleset</label>
+						<div class="dropdown" id="ruleset-dd">
+							<button type="button" class="dropdown-trigger" id="ruleset-trigger"
+								aria-haspopup="listbox" aria-expanded="false"
+								aria-labelledby="ruleset-label ruleset-trigger">
+								<span class="dropdown-current" id="ruleset-current">Full · the real game</span>
+							</button>
+							<ul class="dropdown-list" id="ruleset-list" role="listbox"
+								aria-label="Ruleset" tabindex="-1" hidden>
+								<li role="option" id="ruleset-opt-classic" data-value="classic">
+									<span class="opt-name">Classic</span><span class="opt-note">plain lines</span></li>
+								<li role="option" id="ruleset-opt-branch" data-value="branch">
+									<span class="opt-name">Branching</span><span class="opt-note">learn timelines</span></li>
+								<li role="option" id="ruleset-opt-full" data-value="full" aria-selected="true">
+									<span class="opt-name">Full</span><span class="opt-note">the real game</span></li>
+							</ul>
 						</div>
 						<p class="field-note" id="ruleset-note"></p>
 					</div>

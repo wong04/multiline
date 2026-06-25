@@ -37,8 +37,9 @@
 	--clay-soft: 0 10px 20px -10px rgba(74, 67, 102, 0.40),
 		inset 4px 4px 8px rgba(255, 255, 255, 0.7),
 		inset -5px -5px 10px rgba(120, 108, 150, 0.26);
-	--clay-press: inset 5px 5px 11px rgba(120, 108, 150, 0.40),
-		inset -5px -5px 11px rgba(255, 255, 255, 0.65);
+	/* shallow, clean recess — gentle enough that small pills don't go muddy */
+	--clay-press: inset 2px 2px 5px rgba(120, 108, 150, 0.34),
+		inset -2px -2px 5px rgba(255, 255, 255, 0.55);
 
 	/* legacy aliases (soft, so anything still referencing them stays clay-ish) */
 	--outline: transparent;
