@@ -55,6 +55,7 @@ body.playing .tagline { display: none; }
 	box-shadow: 0 5px 0 var(--shadow);
 	transition: transform 220ms var(--spring), box-shadow 200ms;
 }
+.sound-sticker { right: 62px; background: var(--mint); font-size: 20px; }
 .help-sticker:hover { transform: translateY(-3px) rotate(12deg); box-shadow: 0 9px 0 var(--shadow); }
 .help-sticker:active { transform: translateY(2px) scale(0.92); box-shadow: 0 2px 0 var(--shadow); }
 

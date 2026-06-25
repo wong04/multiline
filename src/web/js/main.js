@@ -1,4 +1,5 @@
 // Bootstrap: wire lobby actions, message dispatch, canvas input, playful atmosphere.
+import * as audio from "./audio.js";
 import * as net from "./net.js";
 import * as render from "./render.js";
 import * as tutorial from "./tutorial.js";
@@ -33,8 +34,11 @@ function handleMessage(msg) {
 		if (newWin) render.animateWin();
 		else if (grew) render.animateBranch(msg.timelines.length - 2, msg.timelines.length - 1);
 		else render.render();
-		if (prev) newlyPlaced(prev, msg).forEach((c) => render.animatePlace(c.l, c.x, c.y));
+		const placed = prev ? newlyPlaced(prev, msg) : [];
+		placed.forEach((c) => render.animatePlace(c.l, c.x, c.y));
+		if (placed.length) audio.plop();
 		if (grew) setBranchMode(false);
+		if (newWin) audio.fanfare();
 		if (newWin && !reduced) spawnConfetti();
 		ui.updateBar();
 		if (view.inTutorial) tutorial.onState(msg);
@@ -236,6 +240,21 @@ function setupAtmosphere() {
 	});
 }
 
+// ---------- audio ----------
+function setupAudio() {
+	const btn = document.getElementById("sound");
+	const reflect = () => { if (btn) btn.textContent = audio.isMuted() ? "🔇" : "🔊"; };
+	reflect();
+	if (btn) btn.addEventListener("click", () => { audio.toggleMute(); reflect(); });
+
+	// Pop on any control; start audio on the first gesture (browsers require one).
+	document.addEventListener("pointerdown", () => audio.unlock(), { once: true });
+	document.addEventListener("keydown", () => audio.unlock(), { once: true });
+	document.addEventListener("click", (e) => {
+		if (e.target.closest("button, .link, .chip, .segmented button")) audio.pop();
+	});
+}
+
 const CONFETTI = ["#37d0ff", "#ff7a59", "#ffd23f", "#6ef0c0", "#ff8fcf", "#9b8cff"];
 function spawnConfetti() {
 	for (let i = 0; i < 80; i++) {
@@ -277,6 +296,7 @@ function boot() {
 	});
 	setupCanvas();
 	setupAtmosphere();
+	setupAudio();
 	window.addEventListener("resize", () => { if (view.game) render.render(); });
 
 	// Read-only hook for the playtest harness: inspect state + locate cells. No behaviour change.
