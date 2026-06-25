@@ -38,6 +38,14 @@ def test_invalid_config_rejected():
 	assert unwinnable.status_code == 422
 	bad_mode = client.post("/api/rooms", json={"mode": "bogus", "config": FULL})
 	assert bad_mode.status_code == 422
+	bad_cross_mode = client.post("/api/rooms", json={"mode": "online", "config": {**FULL, "crossWinMode": "bogus"}})
+	assert bad_cross_mode.status_code == 422
+
+
+def test_cross_win_mode_round_trips_to_state():
+	code = make_room("hotseat", config={**FULL, "crossWinMode": "union", "crossWinLength": 4})
+	info = client.get(f"/api/rooms/{code}")
+	assert info.json()["state"]["config"]["crossWinMode"] == "union"
 
 
 # ---------- WebSocket ----------

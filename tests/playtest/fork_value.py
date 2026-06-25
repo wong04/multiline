@@ -29,9 +29,10 @@ RULESETS = {
 	"branch": Config(size=6, win_length=4, max_timelines=3, allow_branch=True, cross_win_length=3),
 	"full": Config(size=8, win_length=5, max_timelines=4, allow_branch=True, cross_win_length=3),
 }
-SEARCH_DEPTH = 1  # set to 1 for a fast directional sweep, 2 to confirm a chosen config
+import os
+SEARCH_DEPTH = int(os.environ.get("SWEEP_DEPTH", "1"))  # 1 = fast sweep; 2 confirms (slower)
 GAMES_VS = 10           # per config for the branch-aware vs place-only match
-GAMES_SELFPLAY = 8      # per config for self-play instrumentation
+GAMES_SELFPLAY = 16     # per config for self-play instrumentation
 MAX_PLIES = 90
 
 
@@ -39,7 +40,7 @@ def best_move(game: Game, allow_fork: bool = True):
 	"""Deterministic alpha-beta pick at SEARCH_DEPTH (no 'easy' randomness), optionally
 	forbidding forks. Mirrors ai.choose_move's top-level selection."""
 	me = game.current
-	moves = ai._ordered_moves(game, me)
+	moves = ai._ordered_moves(game)
 	if not allow_fork:
 		moves = [m for m in moves if m[0] == "place"]
 	if not moves:
@@ -113,17 +114,28 @@ def _median(xs: list[int]) -> float:
 	return s[n // 2] if n % 2 else (s[n // 2 - 1] + s[n // 2]) / 2
 
 
+OPEN_PLIES = 2  # random opening moves per game so deterministic self-play samples varied lines
+
+
 def selfplay(cfg: Config, n: int) -> dict:
-	"""Both sides branch-aware. Measures length, first-mover balance, depth proxies."""
+	"""Both sides branch-aware. Measures length, first-mover balance, depth proxies.
+	Each game starts from a short random opening so the deterministic AI explores different
+	lines (otherwise every game is identical and balance can't be measured)."""
 	branch_moves = total_moves = wins = cross_wins = a_wins = draws = 0
+	branching_sum = 0
 	plies = []
-	for _ in range(n):
+	for g in range(n):
+		random.seed(1000 + g)
 		game = Game(cfg)
 		p = 0
 		for p in range(MAX_PLIES):
 			if game.over:
 				break
-			move = best_move(game, True)
+			branching_sum += len(ai.legal_moves(game))
+			if p < OPEN_PLIES:
+				move = random.choice(ai.legal_moves(game))
+			else:
+				move = best_move(game, True)
 			if move is None:
 				break
 			if move[0] == "branch":
@@ -143,34 +155,35 @@ def selfplay(cfg: Config, n: int) -> dict:
 		"first_mover_winrate": round(a_wins / wins, 2) if wins else None,
 		"branch_move_share": round(branch_moves / total_moves, 2) if total_moves else 0,
 		"cross_win_share": round(cross_wins / wins, 2) if wins else 0,
+		"avg_choices": round(branching_sum / total_moves, 1) if total_moves else 0,
 		"draws": draws,
 	}
 
 
-# Curated sweep for the "real game" board. Each entry: (size, win, cross, max_tl, keep_opp).
-SWEEP = [
-	(8, 5, 3, 4, False),   # OLD Full (asym baseline)
-	(10, 5, 3, 4, True),   # NEW Full candidate: contestable, big board, discount 2
-	(6, 4, 3, 3, True),    # NEW Branching (teaching) candidate: contestable
-]
+# Cross-win-rule comparison: same board, three detection modes.
+# "step" = current consecutive-timeline line; "union"/"distinct" = the new diagonal rules.
+MODE_BASE = dict(size=6, win_length=4, max_timelines=4, allow_branch=True,
+	cross_win_length=4, fork_keep_opponent=True)
+MODES = ["step", "union", "distinct"]
 
 
 def main() -> int:
-	print(f"search_depth={SEARCH_DEPTH}  (self-play n={GAMES_SELFPLAY}, match n={GAMES_VS})\n")
-	hdr = f"{'size win/cross tl fork':24} {'avgPly':>6} {'medPly':>6} {'1stWR':>6} {'brMv':>5} {'xWin':>5} {'forkVal':>7}"
+	print(f"cross-win-mode comparison  (6x6, in-board 4, cross 4, ≤4 TL, contestable forks)")
+	print(f"search_depth={SEARCH_DEPTH}  (self-play n={GAMES_SELFPLAY}, fork-match n={GAMES_VS})\n")
+	hdr = f"{'mode':9} {'avgPly':>6} {'medPly':>6} {'1stWR':>6} {'xWin':>5} {'brMv':>5} {'choices':>7} {'draws':>5} {'forkVal':>7}"
 	print(hdr)
 	print("-" * len(hdr))
-	for size, win, cross, tl, keep in SWEEP:
+	for mode in MODES:
 		random.seed(1234)
-		cfg = Config(size=size, win_length=win, max_timelines=tl,
-			allow_branch=True, cross_win_length=cross, fork_keep_opponent=keep)
+		cfg = Config(cross_win_mode=mode, **MODE_BASE)
 		s = selfplay(cfg, GAMES_SELFPLAY)
 		m = match(cfg, GAMES_VS)
-		label = f"{size}x{size} {win}/{cross} t{tl} {'sym' if keep else 'asym'}"
-		print(f"{label:24} {s['avg_plies']:>6} {str(s['median_plies']):>6} "
-			f"{str(s['first_mover_winrate']):>6} {str(s['branch_move_share']):>5} "
-			f"{str(s['cross_win_share']):>5} {str(m['branch_aware_winrate_decided']):>7}")
-	print("\nGoal: higher avgPly, 1stWR≈0.5, forkVal>0.6 but <1.0, xWin≈0.3-0.7.")
+		print(f"{mode:9} {s['avg_plies']:>6} {str(s['median_plies']):>6} "
+			f"{str(s['first_mover_winrate']):>6} {str(s['cross_win_share']):>5} "
+			f"{str(s['branch_move_share']):>5} {str(s['avg_choices']):>7} "
+			f"{str(s['draws']):>5} {str(m['branch_aware_winrate_decided']):>7}")
+	print("\nLonger play = higher avgPly/medPly; more thinking ≈ high avgPly + balanced 1stWR≈0.5")
+	print("+ healthy xWin share (rule is actually used) and not decided by a fast forced fork.")
 	return 0
 
 

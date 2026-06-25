@@ -24,19 +24,22 @@ const LESSONS = [
 	{
 		ruleset: "branch",
 		title: "Why fork? To win.",
-		body: "Two of your planets already line up across boards. A third in a single board is too short to win — but FORK (top-right) and drop your planet on the glowing cell. That finishes a 3-long diagonal across timelines: a win you simply can't make in one board.",
-		// Pre-seed the position (hotseat plays both colours). After this it's your move:
-		// you have A at (0,0) in TL0 and (1,1) in TL1 — forking at (2,2) completes the
-		// cross-timeline diagonal. Placing (not forking) can't reach the 3rd timeline.
+		body: "Your diagonal is split across boards: three planets here in Timeline 0, and one at (1,1) sitting over in Timeline 1 (you forked earlier to put it there). Fork the glowing cell to finish a diagonal of 4 across your timelines — a win you can't make in any single board.",
+		// Pre-seed the position (hotseat plays both colours). Forks are contestable (copy the
+		// whole board), so the win must be a *split* diagonal: (1,1) lives ONLY in TL1, the rest
+		// in TL0 — so completing (2,2) can never be an in-board 4, only a cross win. After setup
+		// it's A's move; forking TL0 at (2,2) finishes the diagonal across timelines.
 		setup: [
-			{ type: "place", timeline: 0, x: 0, y: 0 },  // A
-			{ type: "place", timeline: 0, x: 5, y: 5 },  // B (harmless; not carried into forks)
-			{ type: "branch", source: 0, x: 1, y: 1 },   // A -> TL1 with A's planets only
-			{ type: "place", timeline: 0, x: 0, y: 5 },  // B (harmless)
+			{ type: "place", timeline: 0, x: 0, y: 0 },  // A (0,0)
+			{ type: "place", timeline: 0, x: 5, y: 5 },  // B
+			{ type: "branch", source: 0, x: 1, y: 1 },   // A -> TL1 (carries (0,0)) + places (1,1)
+			{ type: "place", timeline: 0, x: 5, y: 4 },  // B
+			{ type: "place", timeline: 0, x: 3, y: 3 },  // A (3,3) in TL0 only — NOT carried into TL1
+			{ type: "place", timeline: 0, x: 4, y: 4 },  // B
 		],
-		target: { l: 1, x: 2, y: 2 },
+		target: { l: 0, x: 2, y: 2 },
 		goal: (g) => !!g.winner && new Set((g.winningLine || []).map((c) => c.l)).size > 1,
-		done: "A cross-timeline win — only possible because you forked. THAT'S why you fork.",
+		done: "A cross-timeline win — your diagonal lived across two boards at once. THAT'S why you fork.",
 	},
 ];
 
@@ -69,7 +72,7 @@ export function start() {
 // Each ruleset's goal, shown so learners aren't surprised the row length changes.
 const RULESET_GOAL = {
 	classic: "Classic · 5 in a row",
-	branch: "Branching · 4 in a board, or 3 across timelines",
+	branch: "Branching · 4 in a board, or a diagonal of 4 across timelines",
 };
 
 async function load() {

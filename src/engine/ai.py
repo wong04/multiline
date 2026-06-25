@@ -162,6 +162,7 @@ def _player_score(game: Game, p: Player) -> float:
 	size = game.config.size
 	win_in = game.config.win_length
 	cross = game.config.cross_len
+	mode = game.config.cross_win_mode
 	count_tl = len(game.timelines)
 	score = 0.0
 	seen: set[tuple] = set()
@@ -170,6 +171,10 @@ def _player_score(game: Game, p: Player) -> float:
 			if owner is not p:
 				continue
 			for dx, dy, dl in _DIRECTIONS:
+				# union/distinct cross wins aren't lattice-steps; score those separately below
+				# and only keep in-board (dl == 0) step windows here.
+				if mode != "step" and dl != 0:
+					continue
 				target = win_in if dl == 0 else cross
 				for off in range(target):
 					sx, sy, sl = x - off * dx, y - off * dy, l - off * dl
@@ -182,6 +187,37 @@ def _player_score(game: Game, p: Player) -> float:
 						# Weight by closeness to this window's target (cross targets are shorter,
 						# so a 2/3 cross threat outranks a 2/5 in-board one).
 						score += 10 ** mine * (mine / target)
+	if mode != "step":
+		score += _cross_diag_score(game, p, size, cross, count_tl)
+	return score
+
+
+def _cross_diag_score(game: Game, p: Player, size: int, cross: int, count_tl: int) -> float:
+	"""Reward progress toward a cross-timeline diagonal (union/distinct modes): count diagonal
+	cells the player already holds in some timeline, skipping segments the opponent has sealed
+	off in every timeline. A bonus once the filled cells already span ≥2 timelines."""
+	score = 0.0
+	for dx, dy in ((1, 1), (1, -1)):
+		for sx in range(size):
+			for sy in range(size):
+				ex, ey = sx + dx * (cross - 1), sy + dy * (cross - 1)
+				if not (0 <= ex < size and 0 <= ey < size):
+					continue
+				filled = 0
+				blocked = False
+				tls_used: set[int] = set()
+				for k in range(cross):
+					cx, cy = sx + dx * k, sy + dy * k
+					present = [l for l in range(count_tl) if game.timelines[l].get((cx, cy)) is p]
+					if present:
+						filled += 1
+						tls_used.update(present)
+					elif not any((cx, cy) not in game.timelines[l] for l in range(count_tl)):
+						blocked = True  # every timeline occupies this cell, none of them ours
+						break
+				if blocked or filled == 0:
+					continue
+				score += 10 ** filled * (filled / cross) * (1.3 if len(tls_used) >= 2 else 1.0)
 	return score
 
 

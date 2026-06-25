@@ -135,7 +135,7 @@
 					<span><i class="swatch aurora"></i> Player A</span>
 					<span><i class="swatch solar"></i> Player B</span>
 					<span><i class="swatch echo"></i> Echo · copied when a timeline forked</span>
-					<span class="legend-goal">Goal: <strong id="goal-text">4 in a row</strong> — in one board or across timelines!</span>
+					<span class="legend-goal">Goal: <strong id="goal-text">4 in a row</strong></span>
 				</div>
 			</section>
 		</main>
@@ -152,8 +152,8 @@
 			<h2 class="modal-title">How to play 🪐</h2>
 
 			<h3>Goal</h3>
-			<p>Get your planets in a row before your opponent — across, down, diagonally
-			<strong>within one board</strong>, or stepping diagonally <strong>across neighbouring timelines</strong>.</p>
+			<p>Get your planets in a row before your opponent — across, down, or diagonally
+			<strong>within one board</strong>, or as a <strong>diagonal spread across your timelines</strong>.</p>
 
 			<h3>Your turn</h3>
 			<p>Click an empty cell to drop your planet. Players alternate.</p>
@@ -165,35 +165,51 @@
 			timeline limit of the ruleset.</p>
 
 			<h3>Winning across timelines ✨</h3>
-			<p>A winning row can step diagonally from one board into the timeline next to it — and a
-			cross-timeline row needs <strong>fewer</strong> planets than an in-board one (e.g. 5 in a
-			board, but just 3 across timelines). That's the fast lane to victory.</p>
+			<p>Imagine <strong>stacking your timelines</strong> and looking straight down through them.
+			If your planets form a <strong>diagonal of 4</strong> reading down the stack — each cell
+			filled in <em>some</em> timeline, spread across <strong>two or more</strong> boards — you win.
+			The timelines can be in any order; what matters is the diagonal lines up across the stack.</p>
 
 			<h3>Why fork? 🤔</h3>
-			<p>A cross-timeline row needs <strong>fewer</strong> planets than an in-board one, and every
-			fork adds a board your opponent must <em>also</em> defend. Forking stretches them thin
-			across timelines — build a diagonal they can't cover everywhere at once.</p>
-			<svg class="fork-diagram" viewBox="0 0 220 80" role="img"
-				aria-label="A diagonal winning row stepping across three boards.">
-				<g fill="none" stroke="#4a4366" stroke-width="2">
-					<rect x="2" y="20" width="40" height="40" rx="12" fill="#353160"/>
-					<rect x="90" y="20" width="40" height="40" rx="12" fill="#353160"/>
-					<rect x="178" y="20" width="40" height="40" rx="12" fill="#353160"/>
+			<p>Because forks copy your planets as <strong>echoes</strong>, a diagonal you start in one
+			board can be <em>finished in another</em>. Spread the four cells across your timelines and you
+			complete a line that's <strong>impossible to make in any single board</strong> — and every fork
+			is one more board your opponent has to defend at once.</p>
+			<svg class="fork-diagram" viewBox="0 0 220 96" role="img"
+				aria-label="Stack your timelines and a diagonal of four planets lines up across them.">
+				<!-- left: a stack of timelines -->
+				<g fill="#353160" stroke="#4a4366" stroke-width="2">
+					<rect x="18" y="20" width="30" height="30" rx="7"/>
+					<rect x="12" y="30" width="30" height="30" rx="7"/>
+					<rect x="6" y="40" width="30" height="30" rx="7"/>
 				</g>
-				<g stroke="#ffd34a" stroke-width="3" stroke-dasharray="3 4" fill="none">
-					<line x1="42" y1="52" x2="90" y2="36"/>
-					<line x1="130" y1="36" x2="178" y2="28"/>
+				<text x="21" y="84" font-size="9" fill="#6a6388" font-weight="700">stack</text>
+				<!-- arrow -->
+				<g stroke="#4a4366" stroke-width="2" fill="none">
+					<line x1="54" y1="48" x2="70" y2="48"/>
+					<path d="M66 43 L72 48 L66 53" stroke-linejoin="round"/>
 				</g>
-				<circle cx="12" cy="52" r="7" fill="#5ec8f2"/>
-				<circle cx="110" cy="36" r="7" fill="#5ec8f2"/>
-				<circle cx="200" cy="28" r="7" fill="#5ec8f2"/>
+				<!-- right: the stacked view — a diagonal of 4 across timelines -->
+				<rect x="78" y="6" width="84" height="84" rx="12" fill="#353160" stroke="#4a4366" stroke-width="2"/>
+				<g stroke="rgba(255,255,255,0.14)" stroke-width="1">
+					<line x1="99" y1="6" x2="99" y2="90"/><line x1="120" y1="6" x2="120" y2="90"/><line x1="141" y1="6" x2="141" y2="90"/>
+					<line x1="78" y1="27" x2="162" y2="27"/><line x1="78" y1="48" x2="162" y2="48"/><line x1="78" y1="69" x2="162" y2="69"/>
+				</g>
+				<line x1="88.5" y1="16.5" x2="151.5" y2="79.5" stroke="#ffd34a" stroke-width="3" stroke-dasharray="3 4"/>
+				<g font-size="8" font-weight="700" fill="#fff" text-anchor="middle">
+					<circle cx="88.5" cy="16.5" r="8" fill="#5ec8f2"/><text x="88.5" y="19.5">0</text>
+					<circle cx="109.5" cy="37.5" r="8" fill="#5ec8f2"/><text x="109.5" y="40.5">1</text>
+					<circle cx="130.5" cy="58.5" r="8" fill="#5ec8f2"/><text x="130.5" y="61.5">2</text>
+					<circle cx="151.5" cy="79.5" r="8" fill="#5ec8f2"/><text x="151.5" y="82.5">0</text>
+				</g>
 			</svg>
+			<p class="field-note" style="text-align:center">Each planet can sit in a different timeline (numbered) — they only need to line up across the stack.</p>
 
 			<h3>Rulesets</h3>
 			<ul>
 				<li><strong>Classic</strong> — one board, 5 in a row. Just the basics, no forking.</li>
-				<li><strong>Branching</strong> — 6×6, 4 in a board <em>or 3 across timelines</em>, up to 3 timelines. Learn to fork.</li>
-				<li><strong>Full</strong> — 10×10, 5 in a board <em>or 3 across timelines</em>, up to 4 timelines. The real game.</li>
+				<li><strong>Branching</strong> — 6×6, 4 in a board <em>or a diagonal of 4 across timelines</em>, up to 3 timelines. Learn to fork.</li>
+				<li><strong>Full</strong> — 10×10, 5 in a board <em>or a diagonal of 4 across timelines</em>, up to 4 timelines. The real game.</li>
 			</ul>
 
 			<h3>Modes</h3>

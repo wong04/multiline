@@ -3,8 +3,8 @@ import { view } from "./state.js";
 
 export const RULESETS = {
 	classic: { size: 15, winLength: 5, maxTimelines: 1, allowBranch: false },
-	branch: { size: 6, winLength: 4, crossWinLength: 3, maxTimelines: 3, allowBranch: true },
-	full: { size: 10, winLength: 5, crossWinLength: 3, maxTimelines: 4, allowBranch: true },
+	branch: { size: 6, winLength: 4, crossWinLength: 4, crossWinMode: "union", maxTimelines: 3, allowBranch: true },
+	full: { size: 10, winLength: 5, crossWinLength: 4, crossWinMode: "union", maxTimelines: 4, allowBranch: true },
 };
 
 const RULESET_NOTE = {
@@ -155,9 +155,11 @@ export function updateBar() {
 	if (!g) return;
 	els.branchToggle.classList.toggle("hidden", !g.config.allowBranch);
 	const cross = g.config.crossWinLength;
-	els.goal.textContent = cross && cross < g.config.winLength
-		? `${g.config.winLength} in a row — or just ${cross} across timelines`
-		: `${g.config.winLength} in a row`;
+	els.goal.textContent = g.config.crossWinMode === "union"
+		? `${g.config.winLength} in a row — or a diagonal of ${cross} across your timelines`
+		: cross && cross < g.config.winLength
+			? `${g.config.winLength} in a row — or just ${cross} across timelines`
+			: `${g.config.winLength} in a row`;
 
 	if (els.dot) els.dot.style.background = g.current === "A" ? "var(--p-a)" : "var(--p-b)";
 

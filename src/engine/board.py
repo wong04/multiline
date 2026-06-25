@@ -30,6 +30,11 @@ class Config:
 	# contestable (they can block across boards) — this is what gives games defensive
 	# depth. False is an asymmetric "fresh front" (fast but shallow).
 	fork_keep_opponent: bool = True
+	# How a cross-timeline line wins:
+	#   "step"     — straight line stepping through consecutive timelines (dl=±1 each step)
+	#   "union"    — a diagonal of cross_len cells, each occupied in some timeline, ≥2 timelines
+	#   "distinct" — a diagonal of cross_len cells, each in a distinct timeline (any order)
+	cross_win_mode: str = "step"
 
 	@property
 	def cross_len(self) -> int:
@@ -105,7 +110,8 @@ class Game:
 
 	def _after_move(self) -> None:
 		line = find_winning_line(
-			self.timelines, self.config.size, self.config.win_length, self.config.cross_len
+			self.timelines, self.config.size, self.config.win_length, self.config.cross_len,
+			self.config.cross_win_mode,
 		)
 		if line is not None:
 			self.winner = line.player
@@ -119,6 +125,7 @@ class Game:
 				"size": self.config.size,
 				"winLength": self.config.win_length,
 				"crossWinLength": self.config.cross_len,
+				"crossWinMode": self.config.cross_win_mode,
 				"maxTimelines": self.config.max_timelines,
 				"allowBranch": self.config.allow_branch,
 			},

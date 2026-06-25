@@ -26,7 +26,8 @@ from .schemas import CreateRoom
 
 WEB_DIR = Path(__file__).resolve().parent.parent / "web"
 QUICKMATCH_CONFIG = Config(
-	size=10, win_length=5, max_timelines=4, allow_branch=True, cross_win_length=3
+	size=10, win_length=5, max_timelines=4, allow_branch=True,
+	cross_win_length=4, cross_win_mode="union",
 )
 SWEEP_INTERVAL_SECONDS = 60
 

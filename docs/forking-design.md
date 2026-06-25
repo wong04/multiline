@@ -113,3 +113,27 @@ Prototype **A first** (cheap, measurable): make cross-timeline the efficient win
 If it still feels flat, add **B** (asymmetric fork) for a genuine attacking front. Then build
 the guided fork-to-win tutorial + copy on a mechanic that actually rewards forking. Hold C/D
 unless we want to go deeper.
+
+## Update 3 — cross-win rule made intuitive: "union diagonal" (2026-06-25)
+The step rule (a straight line through *consecutive* timelines) tested well for balance but was
+**unintuitive to players** — you can't see it across separately-drawn boards. We added a
+`cross_win_mode` switch (`step | union | distinct`) and simulated two looser, "diagonal of 4 in
+any timeline order" rules vs the step baseline (6×6, in-board 4, cross 4, ≤4 TL, contestable):
+
+| mode | avg plies (d1 / d2) | first-mover WR (d2) | cross-win share (d2) |
+|---|---|---|---|
+| step (old) | 11.2 / 29.2 | 0.44 | 0.06 (forking ~useless) |
+| **union** | 12.5 / 22.0 | **0.50** | **0.62** |
+| distinct | 13.5 / 33.4 | 0.62 | 0.06 (rarely completes) |
+
+- **union** = a diagonal of `cross_len` cells, each held in *some* timeline, spanning ≥2 timelines
+  (cells may reuse timelines); not a cross win if a single board holds all of it (that's in-board).
+- **distinct** = the same but each diagonal cell in a *distinct* timeline.
+
+**Shipped union.** It makes cross-timeline wins the *central, balanced* path (decides ~62% of
+games, first-mover ≈0.50) and forking decisive — the intuitive payoff players were missing.
+Distinct gave the longest games but its win almost never completes (0.06 share), so it didn't
+actually fix the "cross wins feel pointless" problem. Branching & Full + quick-match now use
+`cross_win_mode="union", cross_win_length=4`; the lesson-3 puzzle and rulebook were rewritten to
+teach the "stack your timelines → line up a diagonal of 4 across them" framing. `distinct` stays
+available behind the flag.

@@ -91,3 +91,18 @@ def test_cross_timeline_win_via_play():
 	assert g.over and g.winner is A
 	used_timelines = {c[2] for c in g.winning_line.cells}
 	assert used_timelines == {0, 1, 2}
+
+
+def test_union_cross_win_via_play():
+	# Union mode: a diagonal of 4 assembled ACROSS timelines (the tutorial lesson-3 shape).
+	# (1,1) lives only in t1, so completing (2,2) can't be an in-board 4 — only a cross win.
+	cfg = Config(size=6, win_length=4, max_timelines=3, allow_branch=True,
+		cross_win_length=4, cross_win_mode="union")
+	g = Game(cfg)
+	for mv in [("place", 0, 0, 0), ("place", 0, 5, 5), ("branch", 0, 1, 1),
+		("place", 0, 5, 4), ("place", 0, 3, 3), ("place", 0, 4, 4)]:
+		(g.place if mv[0] == "place" else g.branch)(mv[1], mv[2], mv[3])
+	assert not g.over  # not yet won after the seeded position
+	g.branch(0, 2, 2)  # A forks t0 at (2,2) -> completes diagonal of 4 across timelines
+	assert g.over and g.winner is A
+	assert len({c[2] for c in g.winning_line.cells}) > 1  # genuinely cross-timeline
