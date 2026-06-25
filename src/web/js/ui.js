@@ -156,9 +156,9 @@ export function updateBar() {
 	els.branchToggle.classList.toggle("hidden", !g.config.allowBranch);
 	const cross = g.config.crossWinLength;
 	els.goal.textContent = g.config.crossWinMode === "union"
-		? `${g.config.winLength} in a row — or a diagonal of ${cross} across your timelines`
+		? `${g.config.winLength} in one board — or a diagonal of ${cross} across different timelines`
 		: cross && cross < g.config.winLength
-			? `${g.config.winLength} in a row — or just ${cross} across timelines`
+			? `${g.config.winLength} in one board — or ${cross} across different timelines`
 			: `${g.config.winLength} in a row`;
 
 	if (els.dot) els.dot.style.background = g.current === "A" ? "var(--p-a)" : "var(--p-b)";

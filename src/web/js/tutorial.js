@@ -72,7 +72,7 @@ export function start() {
 // Each ruleset's goal, shown so learners aren't surprised the row length changes.
 const RULESET_GOAL = {
 	classic: "Classic · 5 in a row",
-	branch: "Branching · 4 in a board, or a diagonal of 4 across timelines",
+	branch: "Branching · 4 in a board, or a diagonal of 4 across different timelines",
 };
 
 async function load() {
