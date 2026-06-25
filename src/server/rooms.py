@@ -32,6 +32,7 @@ class Room:
 		self.ai_difficulty = ai_difficulty
 		self.game = Game(config)
 		self.seats: dict[str, Player | None] = {}  # client token -> seat (None = spectator)
+		self.owner_token: str | None = None  # first client to join; controls reset in ai/hotseat
 		self.last_active = time.monotonic()
 
 	def touch(self) -> None:
@@ -39,6 +40,8 @@ class Room:
 
 	def add_player(self, token: str) -> Player | None:
 		self.touch()
+		if self.owner_token is None:
+			self.owner_token = token
 		if token in self.seats:
 			return self.seats[token]  # reconnecting: keep the same seat
 		if self.mode == "hotseat":
@@ -85,12 +88,15 @@ class Room:
 		self.touch()
 		kind = msg.get("type")
 		if kind == "reset":
-			# hotseat/ai have a single human controller; online is gated to prevent griefing.
 			if self.mode == "online":
 				if not self.is_seated(token):
 					raise IllegalMove("only seated players can reset")
 				if not self.game.over:
 					raise IllegalMove("can only reset after the game ends")
+			# ai/hotseat have a single human controller — only the room owner may reset,
+			# so a spectator/second tab can't wipe the board mid-game.
+			elif token != self.owner_token:
+				raise IllegalMove("only the game owner can reset")
 			self.reset()
 			return
 		if not self.may_move(token):

@@ -25,14 +25,18 @@ def choose_move(game: Game, difficulty: str = "normal") -> Move | None:
 		return None
 	depth = _DEPTH.get(difficulty, 2)
 	me = game.current
-	moves = _ordered_moves(game, me)
+	moves = _ordered_moves(game)
 	if not moves:
 		return None
 
 	best, best_val = None, float("-inf")
 	alpha = float("-inf")
+	scored: list[tuple[float, Move]] = []
 	for mv in moves:
-		val = _minimax(_apply(game, mv), depth - 1, alpha, float("inf"), me)
+		# Easy plays shallowly (near-best, not deep best), so search the easy candidates at
+		# depth 0; everyone else uses the configured depth.
+		val = _minimax(_apply(game, mv), 0 if difficulty == "easy" else depth - 1, alpha, float("inf"), me)
+		scored.append((val, mv))
 		if val > best_val:
 			best_val, best = val, mv
 		alpha = max(alpha, val)
@@ -42,7 +46,7 @@ def choose_move(game: Game, difficulty: str = "normal") -> Move | None:
 		# genuinely random legal move (a real blunder), otherwise a near-best move.
 		if random.random() < 0.55:
 			return random.choice(legal_moves(game))
-		good = [m for m in moves if _minimax(_apply(game, m), 0, float("-inf"), float("inf"), me) >= best_val - 1]
+		good = [mv for val, mv in scored if val >= best_val - 1]
 		return random.choice(good) if good else best
 	return best
 
@@ -90,13 +94,29 @@ def _candidate_cells(game: Game, l: int) -> set[tuple[int, int]]:
 	return cells
 
 
-def _ordered_moves(game: Game, me: Player) -> list[Move]:
+def _ordered_moves(game: Game) -> list[Move]:
 	moves = legal_moves(game)
-	# Order by the static evaluation of the resulting position (best first).
-	scored = sorted(
-		moves, key=lambda m: _evaluate(_apply(game, m), me), reverse=True
-	)
-	return scored[:_MAX_BRANCHING]
+	# Cheap positional ordering (no board copy / full eval): explore moves next to existing
+	# stones first — that's where lines form. Just for alpha-beta move order + truncation;
+	# the leaf evaluation still does the real scoring.
+	moves.sort(key=lambda m: _move_priority(game, m), reverse=True)
+	return moves[:_MAX_BRANCHING]
+
+
+def _move_priority(game: Game, move: Move) -> int:
+	_, l, x, y = move
+	board = game.timelines[l]
+	score = 0
+	for dx in (-1, 0, 1):
+		for dy in (-1, 0, 1):
+			if (dx or dy) and (x + dx, y + dy) in board:
+				score += 2  # adjacent to a stone in this timeline
+	for nl in (l - 1, l + 1):  # same cell in a neighbouring timeline — keeps forks/cross lines in view
+		if 0 <= nl < len(game.timelines) and (x, y) in game.timelines[nl]:
+			score += 2
+	if move[0] == "branch":
+		score -= 1  # a fork costs a tempo; try plain placements first
+	return score
 
 
 def _minimax(game: Game, depth: int, alpha: float, beta: float, me: Player) -> float:
@@ -104,7 +124,7 @@ def _minimax(game: Game, depth: int, alpha: float, beta: float, me: Player) -> f
 		return WIN_SCORE if game.winner is me else -WIN_SCORE
 	if depth == 0:
 		return _evaluate(game, me)
-	moves = _ordered_moves(game, game.current)
+	moves = _ordered_moves(game)
 	if not moves:
 		return _evaluate(game, me)
 

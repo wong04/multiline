@@ -34,6 +34,18 @@ registry = RoomRegistry()
 queue = QueueManager()
 _conn_ids = count(1)
 _connections: dict[str, dict[int, WebSocket]] = {}  # code -> {conn_id: WebSocket}
+_room_locks: dict[str, asyncio.Lock] = {}  # code -> lock serializing moves/AI per room
+
+# Errors expected when sending to a socket that's closing or already gone.
+_SEND_ERRORS = (WebSocketDisconnect, RuntimeError, ConnectionError)
+
+
+def _room_lock(code: str) -> asyncio.Lock:
+	lock = _room_locks.get(code)
+	if lock is None:
+		lock = asyncio.Lock()
+		_room_locks[code] = lock
+	return lock
 
 
 @asynccontextmanager
@@ -87,7 +99,7 @@ async def _broadcast(code: str) -> None:
 		return
 	message = _state_message(room)
 	for ws in list(_connections.get(code, {}).values()):
-		with suppress(Exception):
+		with suppress(*_SEND_ERRORS):
 			await ws.send_json(message)
 
 
@@ -116,12 +128,12 @@ async def queue_socket(websocket: WebSocket):
 		room = registry.create(QUICKMATCH_CONFIG, "online")
 	except RoomLimit as exc:
 		err = {"type": "error", "message": str(exc)}
-		with suppress(Exception):
+		with suppress(*_SEND_ERRORS):
 			await partner_ws.send_json(err)
 		await websocket.send_json(err)
 		return
 	matched = {"type": "matched", "code": room.code}
-	with suppress(Exception):
+	with suppress(*_SEND_ERRORS):
 		await partner_ws.send_json(matched)
 		await partner_ws.close()
 	await websocket.send_json(matched)
@@ -153,13 +165,16 @@ async def game_socket(websocket: WebSocket, code: str):
 			if not isinstance(msg, dict):
 				await websocket.send_json({"type": "error", "message": "invalid message"})
 				continue
-			try:
-				room.apply(token, msg)
-			except IllegalMove as exc:
-				await websocket.send_json({"type": "error", "message": str(exc)})
-				continue
-			if room.is_ai_turn():
-				await asyncio.to_thread(room.play_ai)
+			# Serialize per room so a move and the AI reply can't interleave with another
+			# connection's message (e.g. a second tab) mutating the same game.
+			async with _room_lock(code):
+				try:
+					room.apply(token, msg)
+				except IllegalMove as exc:
+					await websocket.send_json({"type": "error", "message": str(exc)})
+					continue
+				if room.is_ai_turn():
+					await asyncio.to_thread(room.play_ai)
 			await _broadcast(code)
 	except WebSocketDisconnect:
 		pass
@@ -169,6 +184,7 @@ async def game_socket(websocket: WebSocket, code: str):
 			conns.pop(conn_id, None)
 			if not conns:
 				_connections.pop(code, None)
+				_room_locks.pop(code, None)
 
 
 # Static front end mounted last so it doesn't shadow the API/WS routes above.

@@ -73,6 +73,7 @@ export function connectQueue(handlers) {
 	view.queueWs = ws;
 	ws.onmessage = (e) => handlers.onMessage(JSON.parse(e.data));
 	ws.onclose = () => handlers.onClose && handlers.onClose();
+	ws.onerror = () => handlers.onError && handlers.onError();
 	return ws;
 }
 

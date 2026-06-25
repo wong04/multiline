@@ -115,6 +115,7 @@ function quickmatch() {
 			}
 		},
 		onClose: () => ui.showWaiting(false),
+		onError: () => { ui.showWaiting(false); ui.setHint("✖ Matchmaking connection failed.", true); },
 	});
 }
 

@@ -145,6 +145,25 @@ def test_ai_responds_after_human_move():
 		assert len(b_stones) == 1
 
 
+def test_ai_reset_rejected_for_non_owner():
+	code = make_room("ai")
+	with client.websocket_connect(f"/ws/{code}?token=human") as ws:
+		assert ws.receive_json()["seat"] == "A"  # human owns the room
+		ws.receive_json()
+		ws.send_json({"type": "place", "timeline": 0, "x": 3, "y": 3})
+		ws.receive_json()  # AI replied
+		with client.websocket_connect(f"/ws/{code}?token=intruder") as spy:
+			spy.receive_json(); spy.receive_json()  # joined + state
+			ws.receive_json()  # owner sees the spy-join broadcast
+			spy.send_json({"type": "reset"})
+			err = spy.receive_json()
+			assert err["type"] == "error" and "owner" in err["message"]
+		# owner can still reset
+		ws.send_json({"type": "reset"})
+		state = ws.receive_json()
+		assert state["timelines"] == [[]] and state["current"] == "A"
+
+
 def test_quickmatch_pairs_two_clients():
 	with client.websocket_connect("/ws/queue?token=p1") as a:
 		assert a.receive_json() == {"type": "waiting"}

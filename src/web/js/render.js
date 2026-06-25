@@ -7,6 +7,7 @@ const PAD = 26;
 const GAP = 60;
 const LABEL = 24;
 let layout = [];
+let canvasDims = { w: 0, h: 0, dpr: 0 }; // last applied backing-store size
 let anim = null; // { type:"branch"|"win", start, dur, ... }
 let pops = []; // [{ l, x, y, start }]
 let rafQueued = false;
@@ -48,11 +49,16 @@ function computeLayout() {
 	const w = PAD * 2 + cols * boardPx + (cols - 1) * GAP;
 	const h = PAD * 2 + rows * rowH + (rows - 1) * GAP;
 	const dpr = window.devicePixelRatio || 1;
-	canvas.width = w * dpr;
-	canvas.height = h * dpr;
-	canvas.style.width = w + "px";
-	canvas.style.height = h + "px";
-	ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+	// Assigning canvas.width/height reallocates + clears the backing store, so only do it
+	// when the size actually changed (render() runs on every mousemove).
+	if (w !== canvasDims.w || h !== canvasDims.h || dpr !== canvasDims.dpr) {
+		canvas.width = w * dpr;
+		canvas.height = h * dpr;
+		canvas.style.width = w + "px";
+		canvas.style.height = h + "px";
+		ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+		canvasDims = { w, h, dpr };
+	}
 }
 
 function cellCenter(l, x, y) {
@@ -141,7 +147,7 @@ function draw(now) {
 			ctx.globalAlpha = 1;
 		}
 		ctx.save();
-		ctx.strokeStyle = "#16224d"; ctx.lineWidth = 3;
+		ctx.strokeStyle = INK; ctx.lineWidth = 3;
 		ctx.strokeRect(cx - CELL / 2 + 2, cy - CELL / 2 + 2, CELL - 4, CELL - 4);
 		ctx.restore();
 	}
