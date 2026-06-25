@@ -19,15 +19,24 @@
 
 	<!-- floating cosmic scene -->
 	<div class="scene" aria-hidden="true">
-		<span class="planet drift p1"></span>
-		<span class="planet drift p2 ringed"></span>
-		<span class="planet drift p3"></span>
-		<span class="planet drift p4"></span>
-		<span class="planet drift p5"></span>
+		<span class="moon"></span>
+		<span class="planet drift p1 depth-far"></span>
+		<span class="planet drift p2 ringed depth-near"></span>
+		<span class="planet drift p3 depth-near"></span>
+		<span class="planet drift p4 depth-far"></span>
+		<span class="planet drift p5 depth-mid"></span>
 		<span class="twinkle t1">✦</span>
 		<span class="twinkle t2">✦</span>
 		<span class="twinkle t3">✦</span>
 		<span class="twinkle t4">✦</span>
+	</div>
+
+	<!-- ambient drifting masses (separate layer so they cross the whole viewport) -->
+	<div class="space-traffic" aria-hidden="true">
+		<span class="asteroid a1"></span>
+		<span class="asteroid a2"></span>
+		<span class="asteroid a3"></span>
+		<span class="comet"></span>
 	</div>
 
 	<!-- boot loader -->
@@ -39,7 +48,7 @@
 	<div class="stage">
 		<header class="masthead">
 			<h1 class="wordmark">Multiline</h1>
-			<p class="tagline">A cosmic line-up game — get your planets in a row! 🪐</p>
+			<p class="tagline">A cosmic line game — squish your planets into a row! 🪐</p>
 			<button id="sound" class="help-sticker sound-sticker" title="Sound on/off" aria-label="Toggle sound">🔊</button>
 			<button id="help" class="help-sticker" title="Learn to play" aria-label="Learn to play">?</button>
 		</header>
@@ -166,18 +175,18 @@
 			across timelines — build a diagonal they can't cover everywhere at once.</p>
 			<svg class="fork-diagram" viewBox="0 0 220 80" role="img"
 				aria-label="A diagonal winning row stepping across three boards.">
-				<g fill="none" stroke="#16224d" stroke-width="2">
-					<rect x="2" y="20" width="40" height="40" rx="6" fill="#163063"/>
-					<rect x="90" y="20" width="40" height="40" rx="6" fill="#163063"/>
-					<rect x="178" y="20" width="40" height="40" rx="6" fill="#163063"/>
+				<g fill="none" stroke="#4a4366" stroke-width="2">
+					<rect x="2" y="20" width="40" height="40" rx="12" fill="#353160"/>
+					<rect x="90" y="20" width="40" height="40" rx="12" fill="#353160"/>
+					<rect x="178" y="20" width="40" height="40" rx="12" fill="#353160"/>
 				</g>
-				<g stroke="#ffe24a" stroke-width="3" stroke-dasharray="3 4" fill="none">
+				<g stroke="#ffd34a" stroke-width="3" stroke-dasharray="3 4" fill="none">
 					<line x1="42" y1="52" x2="90" y2="36"/>
 					<line x1="130" y1="36" x2="178" y2="28"/>
 				</g>
-				<circle cx="12" cy="52" r="7" fill="#37d0ff" stroke="#16224d" stroke-width="2"/>
-				<circle cx="110" cy="36" r="7" fill="#37d0ff" stroke="#16224d" stroke-width="2"/>
-				<circle cx="200" cy="28" r="7" fill="#37d0ff" stroke="#16224d" stroke-width="2"/>
+				<circle cx="12" cy="52" r="7" fill="#5ec8f2"/>
+				<circle cx="110" cy="36" r="7" fill="#5ec8f2"/>
+				<circle cx="200" cy="28" r="7" fill="#5ec8f2"/>
 			</svg>
 
 			<h3>Rulesets</h3>

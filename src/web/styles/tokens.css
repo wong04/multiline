@@ -1,43 +1,56 @@
 :root {
-	/* bright vibrant cosmic sky */
-	--sky-top: #7fe0ff;
-	--sky-mid: #8aa6ff;
-	--sky-bot: #ffb4dd;
+	/* soft milky pastel clay sky */
+	--sky-top: #ece6ff;
+	--sky-mid: #ffe7f1;
+	--sky-bot: #dff1ff;
 
-	--deep: #0f1f47; /* "window into space" board fill */
-	--deep-2: #163063;
-	--ink: #16224d; /* text on bright areas */
-	--ink-soft: #36426b; /* darkened for AA contrast on cream/sky */
-	--cream: #fff7ef;
+	--deep: #2a2748; /* dark-clay board tray (matte, not glossy) */
+	--deep-2: #353160;
+	--ink: #4a4366; /* warm deep text — no hard outlines anymore */
+	--ink-soft: #6a6388; /* muted clay for labels/captions */
+	--cream: #fbf3ec; /* warm clay surface */
 	--white: #ffffff;
 
-	/* players — glossy orbs */
-	--p-a: #37d0ff;
-	--p-a-hi: #e2fbff;
-	--p-a-deep: #0a86c7;
-	--p-b: #ff7a59;
-	--p-b-hi: #ffe0c4;
-	--p-b-deep: #d8421f;
+	/* players — matte clay orbs */
+	--p-a: #5ec8f2;
+	--p-a-hi: #cdeeff;
+	--p-a-deep: #2f8fc0;
+	--p-b: #ff9a76;
+	--p-b-hi: #ffd6c4;
+	--p-b-deep: #df6644;
 
-	/* accent pops */
-	--sun: #ffd23f;
-	--mint: #6ef0c0;
-	--bubble: #ff8fcf;
-	--grape: #9b8cff;
+	/* accent clays */
+	--sun: #ffcf5e;
+	--mint: #8fe6c4;
+	--bubble: #ff9ecb;
+	--grape: #b3a4ff;
 
-	--win: #ffe24a;
+	--win: #ffd34a;
 
-	/* sticker outline + shadow */
-	--outline: #16224d;
-	--shadow: rgba(22, 34, 77, 0.28);
+	/* ---- clay shadow system (replaces hard outline + offset shadow) ----
+	   raised clay = outer drop + top-left light + bottom-right shade;
+	   pressed clay = inverted insets (looks pushed into the surface). */
+	--clay-raise: 0 16px 30px -12px rgba(74, 67, 102, 0.45);
+	--clay-hi: inset 6px 6px 12px rgba(255, 255, 255, 0.75);
+	--clay-lo: inset -8px -8px 16px rgba(120, 108, 150, 0.30);
+	--clay: var(--clay-raise), var(--clay-hi), var(--clay-lo);
+	--clay-soft: 0 10px 20px -10px rgba(74, 67, 102, 0.40),
+		inset 4px 4px 8px rgba(255, 255, 255, 0.7),
+		inset -5px -5px 10px rgba(120, 108, 150, 0.26);
+	--clay-press: inset 5px 5px 11px rgba(120, 108, 150, 0.40),
+		inset -5px -5px 11px rgba(255, 255, 255, 0.65);
+
+	/* legacy aliases (soft, so anything still referencing them stays clay-ish) */
+	--outline: transparent;
+	--shadow: rgba(74, 67, 102, 0.30);
 
 	/* type */
 	--display: "Baloo 2", "Trebuchet MS", sans-serif;
 	--ui: "Fredoka", "Trebuchet MS", sans-serif;
 
-	/* shape */
-	--radius: 16px;
-	--radius-lg: 26px;
+	/* shape — blobbier */
+	--radius: 22px;
+	--radius-lg: 38px;
 	--radius-pill: 999px;
 
 	/* motion */

@@ -14,10 +14,11 @@ let rafQueued = false;
 let prefersReduced = false;
 
 const COLORS = {
-	A: { base: "#37d0ff", hi: "#e2fbff", deep: "#0a86c7" },
-	B: { base: "#ff7a59", hi: "#ffe0c4", deep: "#d8421f" },
+	A: { base: "#5ec8f2", hi: "#cdeeff", deep: "#2f8fc0" },
+	B: { base: "#ff9a76", hi: "#ffd6c4", deep: "#df6644" },
 };
-const INK = "#16224d";
+const INK = "#4a4366";
+const WIN = "#ffd34a";
 
 export function initCanvas(el) {
 	canvas = el;
@@ -157,7 +158,7 @@ function draw(now) {
 		const { cx, cy } = cellCenter(tgt.l, tgt.x, tgt.y);
 		const pulse = 0.5 + 0.5 * Math.sin(now / 250);
 		ctx.save();
-		ctx.strokeStyle = "#ffe24a";
+		ctx.strokeStyle = WIN;
 		ctx.lineWidth = 3;
 		ctx.globalAlpha = 0.4 + 0.5 * pulse;
 		ctx.setLineDash([4, 4]);
@@ -180,12 +181,12 @@ function drawChart(l, size, stones, now) {
 	ctx.textBaseline = "alphabetic";
 	ctx.fillText(l === 0 ? "Timeline 0" : `Timeline ${l}`, ox, oy - 8);
 
-	// window panel
-	ctx.fillStyle = "#163063";
-	roundRect(ox - 5, oy - 5, boardPx + 10, boardPx + 10, 12);
+	// soft dark-clay board panel (no hard outline)
+	ctx.fillStyle = "#353160";
+	roundRect(ox - 6, oy - 6, boardPx + 12, boardPx + 12, 18);
 	ctx.fill();
-	ctx.lineWidth = 3;
-	ctx.strokeStyle = INK;
+	ctx.lineWidth = 2;
+	ctx.strokeStyle = "rgba(255,255,255,0.08)";
 	ctx.stroke();
 
 	// faint star speckle (deterministic per board)
@@ -228,39 +229,53 @@ function drawOrb(cx, cy, player, inherited, scale, preview) {
 	if (r <= 0) return;
 
 	if (inherited) {
-		ctx.globalAlpha *= 0.4;
+		// "unbaked" ghost clay — faint matte blob, soft dashed edge
+		ctx.save();
+		ctx.globalAlpha *= 0.32;
 		const g = ctx.createRadialGradient(cx - r * 0.3, cy - r * 0.4, r * 0.1, cx, cy, r);
 		g.addColorStop(0, c.hi); g.addColorStop(1, c.base);
 		ctx.fillStyle = g;
 		ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
-		ctx.globalAlpha /= 0.4;
-		ctx.setLineDash([4, 3]); ctx.lineWidth = 2; ctx.strokeStyle = c.base;
+		ctx.restore();
+		ctx.save();
+		ctx.globalAlpha *= 0.55;
+		ctx.setLineDash([4, 4]); ctx.lineWidth = 2; ctx.strokeStyle = c.base;
 		ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
-		ctx.setLineDash([]);
+		ctx.restore();
 		return;
 	}
 
+	// soft cast shadow under the clay ball
 	ctx.save();
-	ctx.shadowColor = "rgba(8,16,40,0.5)";
-	ctx.shadowBlur = 6; ctx.shadowOffsetY = 3;
-	const g = ctx.createRadialGradient(cx - r * 0.35, cy - r * 0.42, r * 0.1, cx, cy, r);
-	g.addColorStop(0, c.hi); g.addColorStop(0.5, c.base); g.addColorStop(1, c.deep);
-	ctx.fillStyle = g;
+	ctx.shadowColor = "rgba(18,14,36,0.45)";
+	ctx.shadowBlur = r * 0.5; ctx.shadowOffsetY = r * 0.22;
+	const base = ctx.createRadialGradient(cx - r * 0.3, cy - r * 0.35, r * 0.15, cx, cy, r);
+	base.addColorStop(0, c.hi); base.addColorStop(0.55, c.base); base.addColorStop(1, c.deep);
+	ctx.fillStyle = base;
 	ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
 	ctx.restore();
 
-	ctx.lineWidth = Math.max(2, r * 0.14);
-	ctx.strokeStyle = INK;
-	ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+	// matte clay modelling: dark crescent bottom-right + light wash top-left (clipped to ball)
+	ctx.save();
+	ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.clip();
+	const lo = ctx.createRadialGradient(cx + r * 0.5, cy + r * 0.55, r * 0.2, cx + r * 0.1, cy + r * 0.15, r * 1.3);
+	lo.addColorStop(0, "rgba(0,0,0,0)"); lo.addColorStop(1, "rgba(36,26,64,0.45)");
+	ctx.fillStyle = lo;
+	ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+	const hi = ctx.createRadialGradient(cx - r * 0.4, cy - r * 0.45, r * 0.05, cx - r * 0.2, cy - r * 0.2, r * 0.95);
+	hi.addColorStop(0, "rgba(255,255,255,0.5)"); hi.addColorStop(1, "rgba(255,255,255,0)");
+	ctx.fillStyle = hi;
+	ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+	ctx.restore();
 
-	// glossy highlight
-	ctx.fillStyle = "rgba(255,255,255,0.75)";
+	// tiny soft sheen dab
+	ctx.fillStyle = "rgba(255,255,255,0.5)";
 	ctx.beginPath();
-	ctx.ellipse(cx - r * 0.3, cy - r * 0.36, r * 0.3, r * 0.18, -0.6, 0, Math.PI * 2);
+	ctx.ellipse(cx - r * 0.32, cy - r * 0.36, r * 0.26, r * 0.15, -0.6, 0, Math.PI * 2);
 	ctx.fill();
 
 	if (preview) {
-		ctx.setLineDash([3, 4]); ctx.lineWidth = 2; ctx.strokeStyle = "#fff";
+		ctx.setLineDash([3, 4]); ctx.lineWidth = 2; ctx.strokeStyle = "rgba(255,255,255,0.85)";
 		ctx.beginPath(); ctx.arc(cx, cy, r + 5, 0, Math.PI * 2); ctx.stroke();
 		ctx.setLineDash([]);
 	}
@@ -269,7 +284,7 @@ function drawOrb(cx, cy, player, inherited, scale, preview) {
 function drawSparkles(cx, cy, t) {
 	const n = 5, R = (CELL / 2) * (0.6 + t);
 	ctx.save();
-	ctx.fillStyle = "#ffe24a";
+	ctx.fillStyle = WIN;
 	ctx.globalAlpha = 1 - t;
 	for (let i = 0; i < n; i++) {
 		const a = (i / n) * Math.PI * 2 + t;
@@ -285,9 +300,9 @@ function drawThread(srcL, dstL, p) {
 	const x1 = a.ox + a.boardPx / 2, y1 = a.oy + a.boardPx / 2;
 	const x2 = b.ox + b.boardPx / 2, y2 = b.oy + b.boardPx / 2;
 	ctx.save();
-	ctx.strokeStyle = "#ffe24a";
+	ctx.strokeStyle = WIN;
 	ctx.lineWidth = 4; ctx.lineCap = "round";
-	ctx.shadowColor = "#ffe24a"; ctx.shadowBlur = 12;
+	ctx.shadowColor = WIN; ctx.shadowBlur = 12;
 	ctx.beginPath();
 	ctx.moveTo(x1, y1);
 	const midx = x1 + (x2 - x1) * p, midy = y1 + (y2 - y1) * p - Math.sin(p * Math.PI) * 22;
@@ -300,8 +315,8 @@ function drawWinLine(cells, p, now) {
 	const pts = cells.map((c) => cellCenter(c.l, c.x, c.y));
 	const reveal = Math.max(1, Math.floor(pts.length * p));
 	const pulse = 1 + 0.08 * Math.sin(now / 140);
-	// ink underlay
-	for (const pass of [{ w: 9, s: INK }, { w: 5, s: "#ffe24a" }]) {
+	// soft clay-rope underlay, then the bright win cord
+	for (const pass of [{ w: 10, s: "rgba(36,26,64,0.5)" }, { w: 6, s: WIN }]) {
 		ctx.save();
 		ctx.strokeStyle = pass.s; ctx.lineWidth = pass.w; ctx.lineCap = "round"; ctx.lineJoin = "round";
 		ctx.beginPath();
@@ -311,7 +326,7 @@ function drawWinLine(cells, p, now) {
 	}
 	for (let i = 0; i < reveal; i++) {
 		const { cx, cy } = pts[i];
-		ctx.lineWidth = 3; ctx.strokeStyle = "#ffe24a";
+		ctx.lineWidth = 3; ctx.strokeStyle = WIN;
 		ctx.beginPath(); ctx.arc(cx, cy, (CELL / 2 - 3) * pulse, 0, Math.PI * 2); ctx.stroke();
 	}
 }
